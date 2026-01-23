@@ -1,0 +1,1544 @@
+/* =========================================
+   1. VARIABLES & THEME CONFIG
+   ========================================= */
+:root {
+    /* -- Modern Professional Palette (Slate/Blue) -- */
+    --primary: #2563eb;       /* Blue 600 */
+    --primary-dark: #1d4ed8;  /* Blue 700 */
+    --accent: #0ea5e9;        /* Sky 500 */
+    
+    --bg-body: #f1f5f9;       /* Slate 100 */
+    --bg-card: #ffffff;
+    --bg-input: #f8fafc;
+    
+    --text-main: #0f172a;     /* Slate 900 */
+    --text-sub: #64748b;      /* Slate 500 */
+    --border: #e2e8f0;        /* Slate 200 */
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    /* -- Shift Colors (DO NOT CHANGE) -- */
+    --shift-p: #2ecc71;
+    --shift-s: #3498db;
+    --shift-m: #7f8c8d;
+    --shift-o: #e67e22;
+    --shift-vl: #145a32;
+    --shift-bl: #1e3799;
+    --shift-loa: #ecf0f1;
+}
+
+/* --- DARK MODE VARIABLES --- */
+[data-theme="dark"] {
+    --bg-body: #0f172a;       /* Slate 900 */
+    --bg-card: #1e293b;       /* Slate 800 */
+    --bg-input: #334155;      /* Slate 700 */
+    
+    --text-main: #f1f5f9;     /* Slate 100 */
+    --text-sub: #94a3b8;      /* Slate 400 */
+    --border: #334155;        /* Slate 700 */
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    
+    /* Adjustment for LOA in dark mode specifically */
+    --shift-loa: #334155;  
+}
+
+/* =========================================
+   2. GLOBAL RESET & TYPOGRAPHY
+   ========================================= */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    padding-bottom: 100px; /* Space for bottom nav */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.5;
+}
+
+h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.025em; }
+p { margin: 0; }
+
+/* =========================================
+   3. COMPONENTS: HEADER & NAV
+   ========================================= */
+.app-header {
+    background: var(--bg-card);
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    /* Glassmorphism Effect */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .app-header { background: rgba(30, 41, 59, 0.85); }
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-title h2 { font-size: 18px; color: var(--text-main); }
+.header-meta { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-size: 11px; 
+    color: var(--text-sub); 
+    margin-top: 2px;
+}
+.divider { color: var(--border); }
+
+/* Icons */
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon-btn:active { background: var(--bg-input); transform: scale(0.95); }
+.icon-btn-sm { font-size: 18px; padding: 4px; color: var(--text-sub); }
+
+/* Dropdown Menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 240px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+    padding: 8px;
+    flex-direction: column;
+    animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dropdown-menu.show { display: flex; }
+
+.menu-item {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.menu-item:hover { background: var(--bg-input); }
+.menu-icon { font-size: 18px; color: var(--text-sub); }
+.menu-separator { height: 1px; background: var(--border); margin: 6px 0; }
+.menu-label { font-size: 11px; color: var(--text-sub); font-weight: 600; padding: 4px 12px; text-transform: uppercase; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* =========================================
+   4. LAYOUT & CARDS
+   ========================================= */
+.app-container {
+    padding: 20px;
+    max-width: 800px; /* Batasi lebar agar rapi di desktop */
+    margin: 0 auto;
+}
+
+.page-section { display: none; animation: fadeIn 0.4s ease; }
+.page-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.card-header.centered { justify-content: center; }
+.card-header h4 { font-size: 15px; }
+.card-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 15px; }
+
+/* Dashboard Specifics */
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.stat-head {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.badge-count { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; }
+.stat-list { list-style: none; padding: 0; margin: 0; }
+.stat-list li {
+    padding: 10px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+}
+.stat-list li:last-child { border-bottom: none; }
+
+/* Dashboard Highlights */
+.border-top-tl { border-top: 3px solid #f39c12; }
+.team-tl { background: #f39c12; }
+.border-top-sme { border-top: 3px solid #8e44ad; }
+.team-sme { background: #8e44ad; }
+
+/* =========================================
+   5. FORMS & INPUTS (Modern)
+   ========================================= */
+.modern-input, .modern-select, .modern-textarea {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+    appearance: none; /* Hilangkan style bawaan browser */
+}
+
+.modern-input:focus, .modern-select:focus, .modern-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: var(--bg-card);
+}
+
+.select-wrapper { position: relative; width: 100%; }
+.select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-sub);
+    pointer-events: none;
+    font-size: 14px;
+}
+
+.control-row { display: flex; gap: 15px; margin-bottom: 10px; }
+.control-group { flex: 1; }
+.control-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; }
+
+/* Search Bar */
+.search-bar { position: relative; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); font-size: 18px; }
+.search-input { width: 100%; padding: 12px 12px 12px 40px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-main); outline: none; transition: 0.3s; }
+.search-input:focus { background: var(--bg-card); border-color: var(--primary); box-shadow: var(--shadow-md); }
+
+/* =========================================
+   6. TABLE STYLES (Professional)
+   ========================================= */
+.schedule-container {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+}
+
+.team-section { margin-bottom: 0; }
+.team-header {
+    background: #1e293b; /* Slate 800 */
+    color: white;
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+
+th {
+    background: var(--bg-body);
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 1px 0 var(--border); /* Garis bawah sticky */
+}
+[data-theme="dark"] th { background: #1e293b; }
+
+td {
+    padding: 6px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+/* Sticky First Column (Nama) */
+td:first-child, th:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--bg-card);
+    z-index: 15;
+    text-align: left;
+    padding-left: 15px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-main);
+    border-right: 1px solid var(--border);
+    min-width: 120px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+th:first-child { z-index: 30; background: var(--bg-body); }
+[data-theme="dark"] th:first-child { background: #1e293b; }
+[data-theme="dark"] td:first-child { background: #1e293b; }
+
+/* Shift Buttons inside Table */
+.cell-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px; /* Rounded Box instead of Square */
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.cell-btn:active { transform: scale(0.9); }
+.cell-btn:hover { filter: brightness(1.1); }
+
+/* --- SHIFT COLORS (Strictly Preserved) --- */
+.bg-p { background: var(--shift-p); }
+.bg-s { background: var(--shift-s); }
+.bg-m { background: var(--shift-m); }
+.bg-o { background: var(--shift-o); }
+.bg-vl { background: var(--shift-vl); }
+.bg-bl { background: var(--shift-bl); }
+
+/* Special Handling for LOA */
+.bg-loa { 
+    background: var(--shift-loa) !important; 
+    color: var(--text-main) !important; 
+    border: 1px solid var(--border);
+    box-shadow: none; 
+}
+
+/* Highlighted Row (My Profile) */
+tr.my-row td {
+    background-color: #fffbeb !important; /* Amber 50 */
+}
+tr.my-row td:first-child { border-left: 3px solid #f59e0b; }
+[data-theme="dark"] tr.my-row td { background-color: #451a03 !important; }
+
+/* Today Column Highlight */
+th.today-col, td.today-col {
+    background-color: rgba(37, 99, 235, 0.04) !important;
+}
+th.today-col { color: var(--primary); }
+
+/* =========================================
+   7. BUTTONS
+   ========================================= */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+    width: 100%;
+}
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
+.btn-primary:active { background: var(--primary-dark); }
+
+.btn-secondary { background: #64748b; color: white; }
+.btn-warning { background: #f59e0b; color: white; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-ghost { background: transparent; color: var(--text-sub); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+
+/* Icon Text Buttons */
+.action-buttons-row { display: flex; gap: 8px; }
+.btn-icon-text { flex: 1; padding: 10px; font-size: 11px; }
+.btn-green { background: #10b981; color: white; }
+.btn-whatsapp { background: #25D366; color: white; }
+.btn-blue { background: #3b82f6; color: white; }
+
+/* FAB (Floating Action Button) */
+.fab-btn {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    box-shadow: var(--shadow-lg);
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 900;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;
+}
+.fab-btn:active { transform: scale(0.9); }
+
+/* =========================================
+   8. BOTTOM NAVIGATION (Glassmorphism)
+   ========================================= */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 65px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 900;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15);
+    max-width: 500px;
+    margin: 0 auto; /* Center on large screens */
+}
+[data-theme="dark"] .bottom-nav {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item {
+    border: none;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-family: 'Inter';
+    font-size: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    width: 50px;
+}
+.nav-icon { font-size: 22px; margin-bottom: 2px; }
+.nav-item.active { color: var(--primary); transform: translateY(-2px); }
+
+/* Center Button (Home) */
+.nav-center { position: relative; top: -25px; }
+.nav-item.nav-home {
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    border-radius: 50%;
+    color: white;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.nav-item.nav-home .ph { font-size: 24px; }
+.nav-item.nav-home:active { transform: scale(0.95); }
+
+/* =========================================
+   9. MODAL & LOADING
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    width: 90%;
+    max-width: 400px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-header { padding: 20px; border-bottom: 1px solid var(--border); }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 15px 20px; background: var(--bg-input); display: flex; justify-content: flex-end; gap: 10px; }
+.modal-footer.vertical { flex-direction: column; }
+
+/* Loading Spinner Modern */
+.loading-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-card); z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
+    animation: autoHide 0.5s ease-out 2.5s forwards;
+}
+.spinner-box { text-align: center; }
+.spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(37, 99, 235, 0.1);
+    border-left-color: var(--primary); border-radius: 50%;
+    animation: spin 1s linear infinite; margin: 0 auto 15px;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes autoHide { to { opacity: 0; visibility: hidden; display: none; } }
+
+/* =========================================
+   10. EXTRAS (Bulletin, Swaps, Toast)
+   ========================================= */
+.bulletin-board {
+    background: linear-gradient(to right, #fffbeb, #fff);
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-sm);
+    padding: 12px 15px;
+    margin-bottom: 20px;
+}
+[data-theme="dark"] .bulletin-board { background: #451a03; border-color: #78350f; }
+
+.bulletin-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.bulletin-title { display: flex; align-items: center; gap: 8px; }
+.bulletin-content { margin-top: 8px; font-size: 13px; color: var(--text-main); line-height: 1.6; display: none; }
+
+/* Swap Styles */
+.swap-interface {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-input);
+    padding: 15px;
+    border-radius: var(--radius-md);
+    margin-top: 15px;
+}
+.swap-side { flex: 1; min-width: 0; }
+.swap-connector { color: var(--text-sub); font-size: 20px; }
+.days-checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.day-checkbox { position: relative; }
+.day-checkbox input { position: absolute; opacity: 0; cursor: pointer; }
+.day-checkbox label {
+    display: block; padding: 8px; background: var(--bg-input);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-align: center; font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: 0.2s;
+}
+.day-checkbox input:checked + label {
+    background: var(--primary); color: white; border-color: var(--primary);
+}
+
+/* Toast Notification */
+.toast-notification {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #10b981; color: white; padding: 10px 20px;
+    border-radius: 50px; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: var(--shadow-lg); z-index: 3000;
+    opacity: 0; pointer-events: none; transition: 0.3s;
+}
+
+/* Legend */
+.legend-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 15px 0; }
+.legend-item { 
+    font-size: 10px; padding: 4px 10px; border-radius: 20px; 
+    background: var(--bg-input); border: 1px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* --- Filtering Mode (Dim effect) --- */
+body.filtering-mode .cell-btn { opacity: 0.2; filter: grayscale(1); }
+body.filtering-mode .cell-btn.highlighted-shift { opacity: 1 !important; filter: none !important; transform: scale(1.15); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+
+/* =========================================
+   UPDATE: NEAT TOOLBAR LAYOUT
+   ========================================= */
+
+/* Card Controls lebih padat */
+.sticky-controls {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Jarak antar baris atas dan tombol */
+}
+
+/* Grid System untuk Search & Filter */
+.toolbar-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Search ambil 2 bagian, Filter 1 bagian */
+    gap: 10px;
+    align-items: center;
+}
+
+/* Penyesuaian Tinggi agar Sejajar Sempurna */
+.search-input, 
+.modern-select,
+.btn-icon-text {
+    height: 42px; /* Semua elemen tingginya sama */
+    font-size: 13px;
+}
+
+/* Tombol Aksi */
+.action-buttons-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 3 Tombol dibagi rata */
+    gap: 10px;
+}
+
+.btn-icon-text {
+    width: 100%;
+    padding: 0 10px;
+    white-space: nowrap; /* Mencegah teks turun baris */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 8px; /* Sedikit lebih kotak agar terlihat solid */
+}
+
+/* --- RESPONSIF (Untuk HP Layar Kecil) --- */
+@media (max-width: 600px) {
+    .toolbar-top {
+        grid-template-columns: 1fr; /* Kembali bertumpuk di HP */
+        gap: 8px;
+    }
+    
+    /* Tombol jadi ikon saja jika layar sangat sempit, opsional */
+    .btn-icon-text {
+        font-size: 12px;
+        padding: 0 5px;
+    }
+}
+
+/* =========================================
+   MOBILE RESPONSIVE: FULL WEEK VIEW (NO SCROLL)
+   ========================================= */
+
+@media (max-width: 768px) {
+    
+    /* 1. Atur Kontainer Tabel */
+    .schedule-container {
+        width: 100%;
+        overflow-x: auto; /* Jaga-jaga kalau HP sangat kecil */
+        border: none;     /* Hilangkan border luar biar clean */
+    }
+
+    table {
+        table-layout: fixed; /* KUNCI: Memaksa kolom mengikuti lebar layar */
+        width: 100%;
+    }
+
+    /* 2. Pengaturan Kolom NAMA (Kiri) */
+    td:first-child, th:first-child {
+        width: 26%;        /* Nama mengambil 26% lebar layar */
+        min-width: auto;   /* Reset lebar minimum */
+        max-width: 0;      /* Trik agar text-overflow berfungsi */
+        
+        /* Style Teks Nama */
+        font-size: 11px;   
+        padding: 0 0 0 8px; /* Padding kiri sedikit */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Nama panjang jadi "..." (Misal: Nurhana...) */
+    }
+
+    /* 3. Pengaturan Kolom HARI (Senin-Minggu) */
+    th:not(:first-child), td:not(:first-child) {
+        width: 10.5%;      /* Sisanya dibagi rata ke 7 hari */
+        padding: 2px 0;    /* Hapus padding samping biar rapat */
+    }
+
+    /* Header Hari (MON, TUE...) */
+    th {
+        font-size: 8px;    /* Perkecil font header */
+        padding: 8px 0;
+        text-align: center;
+    }
+
+    /* 4. Kecilkan Tombol Shift (Kotak Warna) */
+    .cell-btn {
+        width: 100%;       /* Ikuti lebar kolom */
+        max-width: 32px;   /* Batas maksimal biar ga kegedean */
+        height: 28px;      /* Tinggi diperpendek */
+        aspect-ratio: 1/1; /* Usahakan tetap kotak */
+        
+        font-size: 9px;    /* Kode Shift (P, S, M) mengecil */
+        margin: 0 auto;    /* Tengah */
+        border-radius: 6px; /* Sudut agak tajam dikit biar hemat tempat */
+        padding: 0;        /* Hapus padding dalam tombol */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Hilangkan sticky shadow di mobile biar tidak menutupi */
+    td:first-child, th:first-child {
+        box-shadow: 1px 0 0 var(--border); 
+    }
+    
+    /* Atur margin bawah body agar tidak ketutup nav bar */
+    body {
+        padding-bottom: 80px; 
+    }
+}
+
+/* =========================================
+   UPDATE: NEAT SWAP UI (FIX)
+   ========================================= */
+
+/* Container Utama Agent */
+.swap-agent-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* Kiri - Tengah - Kanan */
+    gap: 15px;
+    align-items: flex-start;
+    background: var(--bg-input);
+    padding: 15px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+/* Bagian Sisi (Agent A & B) */
+.swap-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0; /* Mencegah overflow text */
+}
+
+/* Icon Panah Tengah */
+.swap-connector-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px; /* Sesuaikan tinggi input */
+    margin-top: 24px; /* Kompensasi tinggi label */
+    color: var(--text-sub);
+    font-size: 20px;
+    background: var(--bg-card);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    align-self: flex-start; /* Nempel di atas sejajar input */
+    margin-top: 28px; 
+}
+
+/* Mini Preview Jadwal (Kotak-kotak kecil) */
+.mini-schedule-row {
+    display: flex;
+    gap: 3px;
+    margin-top: 5px;
+    overflow-x: auto; /* Jaga-jaga kalau layar sempit */
+    padding-bottom: 2px;
+}
+/* Memaksa kotak preview lebih kecil dan rapi */
+.mini-schedule-row .cell-btn {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 8px !important;
+    border-radius: 4px !important;
+    flex-shrink: 0;
+}
+
+/* --- DAY SELECTION (Grid 7 Kolom) --- */
+.day-selection-section {
+    margin-top: 20px;
+}
+
+.days-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 Hari dalam 1 Baris */
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.day-check {
+    position: relative;
+}
+
+.day-check input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.day-check label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sub);
+    transition: all 0.2s;
+    user-select: none;
+}
+
+/* Efek saat dipilih */
+.day-check input:checked + label {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Efek Hover (Desktop) */
+.day-check:hover label {
+    border-color: var(--primary);
+}
+
+/* --- RESPONSIF HP (Jika layar sangat kecil) --- */
+@media (max-width: 400px) {
+    .days-compact-grid {
+        grid-template-columns: repeat(4, 1fr); /* Jadi 2 baris kalau layar sempit banget */
+    }
+}
+
+/* =========================================
+   REVISI SWAP UI: VERTICAL (ATAS - BAWAH)
+   ========================================= */
+
+/* 1. Ubah container menjadi tumpukan vertikal */
+.swap-agent-container {
+    display: flex !important;        /* Paksa jadi Flexbox */
+    flex-direction: column !important; /* Susun ke bawah */
+    gap: 0 !important;               /* Reset gap bawaan */
+    padding: 20px !important;        /* Padding lebih lega */
+}
+
+/* 2. Pastikan Agent A & B memenuhi lebar */
+.swap-side {
+    width: 100%;
+    position: relative;
+}
+
+/* 3. Atur posisi Panah di tengah-tengah */
+.swap-connector-icon {
+    align-self: center !important;     /* Posisi tengah horizontal */
+    margin: -10px 0 !important;        /* Tarik sedikit agar menumpuk rapi di border */
+    transform: rotate(90deg);          /* Putar panah jadi menunjuk ke bawah */
+    z-index: 5;                        /* Pastikan di atas elemen lain */
+    background: var(--bg-card);        /* Warna background agar tidak transparan */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Sedikit bayangan */
+    
+    /* Reset posisi layout lama */
+    margin-top: 15px !important;       
+    margin-bottom: 15px !important;
+    width: 40px;
+    height: 40px;
+}
+
+/* 4. Jarak Tombol Confirm (Biar tidak nempel) */
+#tab-swap .btn-primary {
+    margin-top: 30px !important;       /* Jarak jauh dari pilihan hari */
+    display: block;                    /* Pastikan blok */
+    width: 100%;                       /* Lebar penuh */
+    padding: 15px;                     /* Tombol lebih tebal/enak ditekan */
+}
+
+/* 5. Sedikit perbaikan pada Grid Hari agar lebih rapi di bawah Agent B */
+.day-selection-section {
+    margin-top: 25px;                  /* Beri jarak dari Agent B ke Pilihan Hari */
+    padding-top: 20px;
+    border-top: 1px dashed var(--border); /* Garis pemisah tipis */
+}
+
+/* =========================================
+   UPDATE: MODERN AGENT LIST WITH AVATAR
+   ========================================= */
+
+/* Item List Container */
+.agent-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    transition: background 0.2s;
+    gap: 15px; /* Jarak antar avatar dan teks */
+}
+
+.agent-item:last-child {
+    border-bottom: none;
+}
+
+.agent-item:hover {
+    background: var(--bg-input);
+}
+
+/* AVATAR STYLE */
+.agent-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* Membuat lingkaran */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0; /* Mencegah avatar gepeng */
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Info Text Wrapper */
+.agent-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Mengambil sisa ruang */
+    gap: 2px;
+}
+
+.agent-name-text {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.agent-role-text {
+    font-size: 11px;
+    color: var(--text-sub);
+    font-weight: 500;
+}
+
+/* Badge Role Kecil (TL/SME) */
+.mini-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* =========================================
+   FIX: HAPUS JARAK KOSONG LIST AGENT
+   ========================================= */
+
+/* 1. Reset Total untuk List Container */
+ul.agent-list {
+    padding: 0 !important;        /* Menghapus jarak kiri (indentasi) */
+    margin: 0 !important;         /* Menghapus jarak atas/bawah list */
+    list-style-type: none !important; /* Memastikan tidak ada titik bullet */
+    width: 100% !important;       /* Paksa lebar penuh */
+}
+
+/* 2. Pastikan Wrapper tidak menambah jarak */
+.agent-list-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
+}
+
+/* 3. (Opsional) Rapikan Header "Active Agents" agar tidak terlalu jauh */
+.section-header {
+    margin-bottom: 10px !important; /* Kurangi jarak antara Judul dan List */
+    padding-left: 5px; /* Sedikit padding agar lurus dengan list */
+    padding-right: 5px;
+}
+
+/* 4. Pastikan Item List Full Width */
+.agent-item {
+    width: 100%;
+    box-sizing: border-box; /* Agar padding tidak merusak lebar */
+    margin: 0;
+}
+
+/* =========================================
+   FIX: HILANGKAN GAP ATAS & RAPATKAN HEADER
+   ========================================= */
+
+/* Hilangkan padding bawaan container khusus di tab agents */
+#tab-agents.page-section {
+    padding-top: 0 !important;
+    margin-top: -5px !important; /* Tarik sedikit ke atas */
+}
+
+/* Reset margin pada judul */
+.section-header {
+    margin-top: 0 !important;
+    margin-bottom: 15px !important;
+    padding-top: 10px !important; /* Beri sedikit napas dari tepi layar */
+}
+
+.section-header h3 {
+    margin: 0 !important;
+    line-height: 1.2;
+}
+
+/* Pastikan badge total sejajar */
+.badge-pill {
+    margin-top: 0 !important;
+    align-self: center;
+}
+
+/* =========================================
+   FITUR BARU: ALPHABET FILTER (A-Z)
+   ========================================= */
+
+/* Container Scroll Horizontal */
+.alphabet-scroll-wrapper {
+    display: flex;
+    gap: 8px; /* Jarak antar huruf */
+    overflow-x: auto; /* Agar bisa discroll ke samping */
+    padding: 5px 2px 15px 2px; /* Padding bawah agak besar biar scrollbar enak */
+    margin-bottom: 5px;
+    
+    /* Sembunyikan Scrollbar agar terlihat clean */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll di iPhone */
+}
+
+/* Sembunyikan scrollbar di Chrome/Safari */
+.alphabet-scroll-wrapper::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* Tombol Huruf */
+.alpha-btn {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 12px; /* Bentuk kotak membulat modern */
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0; /* Mencegah tombol gepeng */
+    transition: all 0.2s;
+}
+
+/* Efek Hover */
+.alpha-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Efek Aktif (Huruf Terpilih) */
+.alpha-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);
+    transform: scale(1.05);
+}
+
+/* =========================================
+   RE-DESIGN: MODERN DAILY SUMMARY CARDS
+   ========================================= */
+
+/* 1. Reset & Card Base */
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Tetap 2 Kolom */
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px; /* Sudut lebih bulat */
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* Bayangan sangat halus */
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+/* 2. Header Baru (Soft UI) */
+.stat-head {
+    background: #fff; /* Default putih */
+    padding: 12px 15px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+/* Badge Hitungan di Header */
+.badge-count {
+    background: var(--text-main);
+    color: var(--bg-card);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+}
+
+/* 3. List Item yang Lebih Rapi */
+.stat-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.stat-list li {
+    padding: 10px 15px;
+    border-bottom: 1px dashed var(--border); /* Garis putus-putus tipis */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-main);
+    transition: background 0.1s;
+}
+
+.stat-list li:last-child {
+    border-bottom: none;
+}
+
+.stat-list li:hover {
+    background: var(--bg-input);
+}
+
+/* 4. WARNA AKSEN (Border Top & Text Color) */
+
+/* Helper Class untuk Warna Teks */
+.text-p { color: var(--shift-p); }
+.text-s { color: var(--shift-s); }
+.text-m { color: var(--shift-m); }
+.text-o { color: var(--shift-o); }
+.text-vl { color: var(--shift-vl); }
+.text-loa { color: #64748b; }
+
+/* Border Top Warna-warni */
+.card-p { border-top: 4px solid var(--shift-p); }
+.card-s { border-top: 4px solid var(--shift-s); }
+.card-m { border-top: 4px solid var(--shift-m); }
+.card-o { border-top: 4px solid var(--shift-o); }
+.card-vl { border-top: 4px solid var(--shift-vl); }
+.card-loa { border-top: 4px solid #94a3b8; }
+.card-tl { border-top: 4px solid #f97316; }
+.card-sme { border-top: 4px solid #a855f7; }
+
+/* Header Background Tipis (Opsional: Biar makin cantik) */
+.card-p .stat-head { background: #f0fdf4; color: var(--shift-p); }
+.card-s .stat-head { background: #f0f9ff; color: var(--shift-s); }
+.card-m .stat-head { background: #f8fafc; color: var(--shift-m); } /* Abu/Putih */
+.card-o .stat-head { background: #fff7ed; color: var(--shift-o); }
+.card-tl .stat-head { background: #fff7ed; color: #f97316; }
+.card-sme .stat-head { background: #faf5ff; color: #a855f7; }
+
+/* 5. Styling Badge TL/SME (Pill Shape) */
+.role-pill {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px; /* Lonjong */
+    font-weight: 700;
+    margin-left: 6px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* 6. Shift Code Circle (Lingkaran Kode Shift) */
+.shift-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+    margin-left: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Responsif Mobile */
+@media (max-width: 600px) {
+    .groups-grid {
+        gap: 10px; /* Jarak antar kartu lebih rapat di HP */
+    }
+}
+
+/* =========================================
+   FITUR BARU: ZOOM CONTROLS (DAILY SUMMARY)
+   ========================================= */
+
+/* 1. Layout Header & Tombol */
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-card);
+    padding: 4px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.zoom-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-input);
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.zoom-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.zoom-btn:active {
+    transform: scale(0.9);
+}
+
+/* 2. LOGIKA SCALING (Variable CSS) */
+/* Default (Ukuran Normal / 100%) */
+#summaryGrid {
+    --card-font-size: 12px;
+    --card-padding: 10px 15px;
+    --dot-size: 24px;
+    --grid-cols: 2; /* Default 2 Kolom */
+}
+
+/* Zoom Level 1 (Kecil / Compact / 75%) */
+#summaryGrid.zoom-small {
+    --card-font-size: 10px;
+    --card-padding: 6px 10px;
+    --dot-size: 20px;
+    --grid-cols: 3; /* Opsional: Jadi 3 kolom kalau di desktop */
+}
+
+/* Zoom Level 3 (Besar / Lega / 125%) */
+#summaryGrid.zoom-large {
+    --card-font-size: 14px;
+    --card-padding: 14px 20px;
+    --dot-size: 28px;
+    --grid-cols: 1; /* Opsional: Jadi 1 kolom biar jelas */
+}
+
+/* 3. TERAPKAN VARIABLE KE ELEMEN KARTU */
+/* Kita override style sebelumnya menggunakan variable ini */
+
+#summaryGrid .stat-list li {
+    font-size: var(--card-font-size) !important;
+    padding: var(--card-padding) !important;
+}
+
+#summaryGrid .shift-dot {
+    width: var(--dot-size) !important;
+    height: var(--dot-size) !important;
+    font-size: calc(var(--dot-size) * 0.45) !important; /* Ukuran huruf dot otomatis */
+}
+
+#summaryGrid .stat-head {
+    font-size: calc(var(--card-font-size) - 1px) !important;
+}
+
+/* Responsif Grid berdasarkan Zoom */
+@media (min-width: 600px) {
+    #summaryGrid.zoom-small {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+/* Di HP selalu 2 kolom (kecuali zoom besar banget boleh jadi 1) */
+@media (max-width: 600px) {
+    #summaryGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* =========================================
+   UPDATE: ZOOM LEVEL 50% (TINY MODE - 2 COLUMNS)
+   ========================================= */
+
+/* Definisi Variable untuk Level 50% */
+#summaryGrid.zoom-tiny {
+    /* Huruf saya naikkan jadi 10px biar lebih jelas terbaca */
+    --card-font-size: 10px;   
+    
+    /* Padding sedikit dilonggarkan biar tidak terlalu sesak */
+    --card-padding: 5px 8px;  
+    
+    --dot-size: 18px;        
+    --grid-gap: 8px;         
+}
+
+/* KHUSUS HP: Paksa Tetap 2 Kolom (Agar Teks Lega & Jelas) */
+@media (max-width: 600px) {
+    #summaryGrid.zoom-tiny {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* =========================================
+   FITUR: SMART NARRATIVE SUMMARY
+   ========================================= */
+.narrative-card {
+    background: linear-gradient(135deg, #fdfbf7 0%, #fff 100%);
+    border: 1px solid #f39c12; /* Aksen Kuning/Emas */
+    border-left: 5px solid #f39c12;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.15);
+    animation: fadeIn 0.5s ease;
+}
+
+.narrative-icon {
+    font-size: 24px;
+    background: #fff7ed;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    border: 1px solid #ffeebb;
+    flex-shrink: 0;
+}
+
+/* Dark Mode Adjustment */
+[data-theme="dark"] .narrative-card {
+    background: #2d2d2d;
+    border-color: #d35400;
+}
+[data-theme="dark"] .narrative-content h5 {
+    color: #ecf0f1 !important;
+}
+[data-theme="dark"] .narrative-content p {
+    color: #bdc3c7 !important;
+}
+[data-theme="dark"] .narrative-icon {
+    background: #3e2723;
+    border-color: #d35400;
+}
+
+
+/* =========================================
+   FITUR: AI MODAL & LOADING GIMMICK
+   ========================================= */
+
+/* Tombol Pemicu Gradient */
+.btn-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-gradient:hover {
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-gradient .ph {
+    font-size: 18px;
+}
+
+.full-width { width: 100%; }
+.mt-3 { margin-top: 15px; }
+.mb-3 { margin-bottom: 15px; }
+
+
+/* LOADING GIMMICK STYLE */
+.ai-loading-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Spinner berwarna-warni */
+.ai-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: conic-gradient(#0000 10%, #6366f1);
+    -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 6px),#000 0);
+    animation: aiSpin 1s infinite linear;
+}
+@keyframes aiSpin {to{transform: rotate(1turn)}}
+
+/* Teks berkedip */
+.ai-pulsing-text {
+    font-weight: 600;
+    color: var(--text-sub);
+    animation: pulseText 1.5s infinite ease-in-out;
+}
+@keyframes pulseText {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* =========================================
+   FITUR: INITIAL PRELOADER (FORCE WHITE THEME)
+   ========================================= */
+
+.preloader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* 1. FORCE WHITE BACKGROUND */
+    /* Menggunakan !important agar tidak tertimpa oleh style Dark Mode manapun */
+    background-color: #ffffff !important; 
+    
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-out, visibility 0.5s;
+}
+
+.preloader-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.preloader-gif {
+    /* Sesuaikan ukuran GIF Anda */
+    width: 120px; 
+    height: auto;
+    display: block;
+    
+    /* Opsional: Jika GIF Anda transparan tapi elemennya putih, 
+       Anda mungkin perlu filter drop-shadow, tapi jika GIF kotak putih, biarkan begini */
+}
+
+.preloader-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    animation: pulseText 1.5s infinite;
+    
+    /* 2. FORCE DARK TEXT */
+    /* Karena background dipaksa putih, teks WAJIB gelap (Abu tua/Hitam) */
+    color: #1e293b !important; 
+}
+
+/* Class untuk menyembunyikan loader (Fade Out) */
+.preloader-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+

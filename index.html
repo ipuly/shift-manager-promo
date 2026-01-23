@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shift Manager Pro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- <div id="loadingLayer" class="loading-overlay">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <p>Syncing Data...</p>
+        </div>
+    </div> -->
+    
+    <div id="preloader" class="preloader-overlay">
+        <div class="preloader-content">
+            <img src="https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyYjc3cGRxeTE1OGJ2dnEyNjhsZGE3dDZ5cW5rOHF3c292OWdxYmIxNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/86htVvp1HzvPVMuLb8/giphy.gif" alt="Loading..." class="preloader-gif">
+            <p class="preloader-text">Loading Dashboard...</p>
+        </div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-title">
+                <h2>Shift Manager Promotion</h2>
+                <div class="header-meta">
+                    <span id="headerSub">Daily Dashboard</span>
+                    <span class="divider">•</span>
+                    <span id="lastUpdateBadge" class="update-badge">
+                        <i class="ph ph-clock"></i> Waiting data...
+                    </span>
+                </div>
+            </div>
+            
+            <button class="icon-btn hamburger-btn" onclick="toggleMenu()">
+                <i class="ph ph-list"></i>
+            </button>
+        </div>
+
+        <div id="mainMenu" class="dropdown-menu">
+            <div class="menu-section user-section">
+                <label class="menu-label"><i class="ph ph-user-circle"></i> Active Profile</label>
+                <div class="select-wrapper">
+                    <select id="myProfileSelector" onchange="setMyProfile()" class="modern-select">
+                        <option value="-1">Select your name</option>
+                    </select>
+                    <i class="ph ph-caret-down select-arrow"></i>
+                </div>
+            </div>
+            
+            <div class="menu-item" onclick="toggleTheme()">
+                <div class="menu-icon"><i class="ph ph-moon" id="themeIconMenu"></i></div>
+                <span id="themeText">Dark Mode</span>
+            </div>
+            
+            <div class="menu-separator"></div>
+
+            <div class="menu-item" id="authMenuItem" onclick="handleAuthAction()">
+                <div class="menu-icon"><i class="ph ph-lock-key" id="authIcon"></i></div>
+                <span id="authText">Admin Access</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        
+        <div id="tab-import" class="page-section">
+            <div class="card controls-card">
+                <div class="card-header">
+                    <i class="ph ph-scan text-accent"></i>
+                    <h4>Smart Import</h4>
+                </div>
+                <p class="card-desc">Paste raw schedule text or use Google Lens.</p>
+                <textarea id="pasteArea" class="modern-textarea" placeholder="Example: Nurhana 06:00 - 15:00 OFF..."></textarea>
+                <button class="btn btn-primary" onclick="processPaste()">
+                    <i class="ph ph-lightning"></i> Process & Update
+                </button>
+            </div>
+
+            <div class="card controls-card mt-3 border-accent">
+                <div class="card-header">
+                    <i class="ph ph-database text-purple"></i>
+                    <h4>Database Manager</h4>
+                </div>
+                <textarea id="jsonImportArea" class="modern-textarea code-font" placeholder="Paste JSON data here..."></textarea>
+                <div class="action-grid">
+                    <button class="btn btn-secondary" onclick="importRawJson()">
+                        <i class="ph ph-download-simple"></i> Restore
+                    </button>
+                    <button class="btn btn-outline" onclick="copyCurrentJson()">
+                        <i class="ph ph-copy"></i> Copy JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-home" class="page-section active">
+            
+            <div class="bulletin-board">
+                <div class="bulletin-header" onclick="toggleBulletin()">
+                    <div class="bulletin-title">
+                        <i class="ph ph-bell-ringing text-warning"></i>
+                        <h4>Announcements</h4>
+                    </div>
+                    <div class="bulletin-actions">
+                        <button id="btnEditBulletin" onclick="event.stopPropagation(); editBulletin()" class="icon-btn-sm" style="display:none;">
+                            <i class="ph ph-pencil-simple"></i>
+                        </button>
+                        <i class="ph ph-caret-down" id="bulletinArrow"></i>
+                    </div>
+                </div>
+                <div id="bulletinContent" class="bulletin-content">
+                    <p id="bulletinText">No new announcements.</p>
+                </div>
+            </div>
+
+            <div class="card controls-card" id="dashboardCard">
+                <div class="control-row">
+                    <div class="control-group">
+                        <label>View Mode</label>
+                        <div class="select-wrapper">
+                            <select id="weekSelector" class="modern-select" onchange="switchWeekMode()">
+                                <option value="current">Current Week</option>
+                                <option value="next">Next Week (Initial)</option>
+                            </select>
+                            <i class="ph ph-caret-down select-arrow"></i>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Day Filter</label>
+                        <div class="select-wrapper">
+                            <select id="daySelector" class="modern-select" onchange="renderGrouping()">
+                                <option value="0">Monday</option>
+                                <option value="1">Tuesday</option>
+                                <option value="2">Wednesday</option>
+                                <option value="3">Thursday</option>
+                                <option value="4">Friday</option>
+                                <option value="5">Saturday</option>
+                                <option value="6">Sunday</option>
+                            </select>
+                            <i class="ph ph-caret-down select-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="btnRollOver" class="btn btn-warning mt-2" onclick="promoteNextToCurrent()" style="display:none;">
+                    <i class="ph ph-arrow-fat-lines-right"></i> Roll Over to Current Week
+                </button>
+            </div>
+            
+            <button class="btn btn-gradient mt-3 mb-3 full-width" onclick="openSummaryModal()">
+    <i class="ph ph-sparkle"></i> Generate AI Daily Insight
+</button>
+
+<div id="summaryModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="display:flex; align-items:center; gap:8px;">
+                <i class="ph ph-robot text-accent"></i> AI Daily Insight
+            </h3>
+            <button class="icon-btn-sm" onclick="closeSummaryModal()">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="min-height:200px; display:flex; align-items:center; justify-content:center;">
+            
+            <div id="aiLoadingState" class="ai-loading-container">
+                <div class="ai-spinner"></div>
+                <p class="ai-pulsing-text">AI is analyzing schedule data...</p>
+            </div>
+
+            <div id="aiContentState" style="display:none; width:100%;">
+                </div>
+
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary full" onclick="closeSummaryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+
+            <div class="section-header-row">
+    <h4 class="section-title" style="margin:0;">
+        <i class="ph ph-chart-pie-slice"></i> Daily Summary
+    </h4>
+    
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="changeSummaryZoom('out')" title="Zoom Out">
+            <i class="ph ph-minus"></i>
+        </button>
+        <span id="zoomLabel" style="font-size:10px; color:#94a3b8; font-weight:600; min-width:30px; text-align:center;">100%</span>
+        <button class="zoom-btn" onclick="changeSummaryZoom('in')" title="Zoom In">
+            <i class="ph ph-plus"></i>
+        </button>
+    </div>
+</div>
+
+<div id="summaryGrid" class="stats-grid groups-grid">
+    <div class="stat-card card-tl">
+        <div class="stat-head">Team Leader <span class="badge-count" id="cTL">0</span></div>
+        <ul class="stat-list" id="lTL"></ul>
+    </div>
+    
+    <div class="stat-card card-sme">
+        <div class="stat-head">Support (SME) <span class="badge-count" id="cSME">0</span></div>
+        <ul class="stat-list" id="lSME"></ul>
+    </div>
+    
+    <div class="stat-card card-p">
+        <div class="stat-head">Morning <span class="badge-count" id="cP">0</span></div>
+        <ul class="stat-list" id="lP"></ul>
+    </div>
+    
+    <div class="stat-card card-s">
+        <div class="stat-head">Afternoon <span class="badge-count" id="cS">0</span></div>
+        <ul class="stat-list" id="lS"></ul>
+    </div>
+    
+    <div class="stat-card card-m">
+        <div class="stat-head">Night <span class="badge-count" id="cM">0</span></div>
+        <ul class="stat-list" id="lM"></ul>
+    </div>
+    
+    <div class="stat-card card-o">
+        <div class="stat-head">OFF <span class="badge-count" id="cO">0</span></div>
+        <ul class="stat-list" id="lO"></ul>
+    </div>
+    
+    <div class="stat-card card-vl">
+        <div class="stat-head">VL / BL <span class="badge-count" id="cVL">0</span></div>
+        <ul class="stat-list" id="lVL"></ul>
+    </div>
+    
+    <div class="stat-card card-loa">
+        <div class="stat-head">LOA <span class="badge-count" id="cLOA">0</span></div>
+        <ul class="stat-list" id="lLOA"></ul>
+    </div>
+</div>
+
+        </div>
+
+        <div id="tab-schedule" class="page-section">
+    <div class="card controls-card sticky-controls">
+        
+        <div class="toolbar-top">
+            <div class="search-bar">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" onkeyup="searchNames()" placeholder="Find employee...">
+            </div>
+            
+            <div class="select-wrapper filter-wrapper">
+                <select id="teamFilter" class="modern-select" onchange="filterTables()">
+                    <option value="ALL">All Teams</option>
+                    <option value="Hijryan">Team Hijryan</option>
+                    <option value="Silvia">Team Silvia</option>
+                    <option value="Farikha">Team Farikha</option>
+                    <option value="Support">Team Support</option>
+                </select>
+                <i class="ph ph-caret-down select-arrow"></i>
+            </div>
+        </div>
+
+        <div class="action-buttons-row">
+            <button class="btn btn-icon-text btn-green" onclick="downloadScheduleAsImage()">
+                <i class="ph ph-image"></i> Save Image
+            </button>
+            <button class="btn btn-icon-text btn-whatsapp" onclick="copyScheduleText()">
+                <i class="ph ph-whatsapp-logo"></i> Report
+            </button>
+            <button class="btn btn-icon-text btn-blue" onclick="exportToCSV()">
+                <i class="ph ph-microsoft-excel-logo"></i> Excel
+            </button>
+        </div>
+    </div>      
+    
+    <div id="mainContainer" class="schedule-container"></div>
+    
+    <div id="interactiveLegend" class="legend-container"></div>
+
+    <button id="btnResetShifts" class="btn btn-danger mt-3" onclick="resetAll()" style="display:none;">
+        <i class="ph ph-trash"></i> Reset All Shifts
+    </button>
+</div>      
+            
+            <div id="mainContainer" class="schedule-container"></div>
+            
+            <div id="interactiveLegend" class="legend-container"></div>
+        
+            <button id="btnResetShifts" class="btn btn-danger mt-3" onclick="resetAll()" style="display:none;">
+                <i class="ph ph-trash"></i> Reset All Shifts
+            </button>
+        </div>
+
+       <div id="tab-swap" class="page-section">
+    <div class="card controls-card">
+        <div class="card-header centered">
+            <i class="ph ph-arrows-left-right text-accent"></i>
+            <h4>Shift Swap Manager</h4>
+        </div>
+        
+        <div class="swap-agent-container">
+            <div class="swap-side">
+                <label class="input-label">Agent A</label>
+                <div class="select-wrapper">
+                    <select id="swapAgent1" class="modern-select" onchange="updateSwapPreview()"></select>
+                    <i class="ph ph-caret-down select-arrow"></i>
+                </div>
+                <div id="preview1" class="mini-schedule-row"></div>
+            </div>
+            
+            <div class="swap-connector-icon">
+                <i class="ph ph-arrows-left-right"></i>
+            </div>
+            
+            <div class="swap-side">
+                <label class="input-label">Agent B</label>
+                <div class="select-wrapper">
+                    <select id="swapAgent2" class="modern-select" onchange="updateSwapPreview()"></select>
+                    <i class="ph ph-caret-down select-arrow"></i>
+                </div>
+                <div id="preview2" class="mini-schedule-row"></div>
+            </div>
+        </div>
+
+        <div class="day-selection-section">
+            <label class="section-label">Select Days to Swap</label>
+            <div class="days-compact-grid">
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="0" id="d0">
+                    <label for="d0">Mon</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="1" id="d1">
+                    <label for="d1">Tue</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="2" id="d2">
+                    <label for="d2">Wed</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="3" id="d3">
+                    <label for="d3">Thu</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="4" id="d4">
+                    <label for="d4">Fri</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="5" id="d5">
+                    <label for="d5">Sat</label>
+                </div>
+                <div class="day-check">
+                    <input type="checkbox" class="swap-day" value="6" id="d6">
+                    <label for="d6">Sun</label>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary mt-3" onclick="performSwap()">
+            <i class="ph ph-check-circle"></i> Confirm Swap
+        </button>
+    </div>
+</div>
+
+        <div id="tab-agents" class="page-section">
+            <div class="section-header">
+                <h3>Active Agents</h3>
+                <span id="totalAgentsBadge" class="badge-pill">Total: 0</span>
+            </div>
+            
+            <div id="alphabetContainer" class="alphabet-scroll-wrapper"></div>
+
+            <div class="agent-list-wrapper">
+                <ul class="agent-list" id="agentListContainer"></ul>
+            </div>
+            
+            <button id="btnAddAgent" class="fab-btn" onclick="openModal('add')" style="display:none;">
+                <i class="ph ph-plus"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <button id="nav-import" class="nav-item" onclick="switchTab('import', this)" style="display:none;">
+            <i class="ph ph-download-simple nav-icon"></i>
+            <span class="nav-text">Import</span>
+        </button>
+        
+        <button class="nav-item" onclick="switchTab('schedule', this)">
+            <i class="ph ph-calendar-check nav-icon"></i>
+            <span class="nav-text">Shift</span>
+        </button>
+
+        <div class="nav-center">
+            <button class="nav-item nav-home active" onclick="switchTab('home', this)">
+                <i class="ph ph-house"></i>
+            </button>
+        </div>
+
+        <button id="nav-swap" class="nav-item" onclick="switchTab('swap', this)" style="display:none;">
+            <i class="ph ph-arrows-left-right nav-icon"></i>
+            <span class="nav-text">Swap</span>
+        </button>
+
+        <button class="nav-item" onclick="switchTab('agents', this)">
+            <i class="ph ph-users nav-icon"></i>
+            <span class="nav-text">People</span>
+        </button>
+    </nav>
+
+    <div id="agentModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">Manage Agent</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editIndex">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="modalName" class="modern-input" placeholder="Enter name">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <div class="select-wrapper">
+                        <select id="modalRole" class="modern-select">
+                            <option value="Agent">Agent</option>
+                            <option value="TL">Team Leader</option>
+                            <option value="SME">SME</option>
+                        </select>
+                        <i class="ph ph-caret-down select-arrow"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Team</label>
+                    <div class="select-wrapper">
+                        <select id="modalTeam" class="modern-select">
+                            <option value="Hijryan">Hijryan</option>
+                            <option value="Silvia">Silvia</option>
+                            <option value="Farikha">Farikha</option>
+                            <option value="Support">Support</option>
+                        </select>
+                        <i class="ph ph-caret-down select-arrow"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="document.getElementById('agentModal').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAgent()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-card small-modal">
+            <div class="modal-header center">
+                <div class="icon-circle"><i class="ph ph-shield-check"></i></div>
+                <h3>Admin Access</h3>
+                <p>Enter your password to continue</p>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••">
+            </div>
+            <div class="modal-footer vertical">
+                <button class="btn btn-primary full" onclick="doLogin()">Access Dashboard</button>
+                <button class="btn btn-ghost full" onclick="document.getElementById('loginModal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveStatus" class="toast-notification">
+        <i class="ph ph-check-circle"></i>
+        <span>Data Saved</span>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+    window.addEventListener('load', function() {
+        // Tunggu maksimal 3 detik, lalu paksa hilangkan loader
+        setTimeout(function() {
+            const loader = document.getElementById('preloader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => { loader.style.display = 'none'; }, 500);
+            }
+        }, 3000); // 3000ms = 3 detik
+    });
+</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ const AUTH_KEY = "shift_manager_auth_token";
 // 2. STATE APLIKASI
 // ==========================================================
 let isAdmin = false; 
+let accessLogs = []; // Variabel penampung history login
 let masterData = [];
 
 // Data Jadwal
@@ -25,6 +26,9 @@ let lastUpdateTime = "-";
 let currentViewMode = 'current'; // 'current' atau 'next'
 
 let selectedFilterLetter = 'ALL';
+
+let selectedTagFilter = 'ALL'; 
+
 
 // Kode Shift & Warna (Sesuai CSS Variables)
 const shiftTypes = {
@@ -51,39 +55,62 @@ function checkAuth() {
 function updateUIForAdmin() {
     const authText = document.getElementById('authText');
     const authIcon = document.getElementById('authIcon');
+    const session = localStorage.getItem('SHIFT_APP_SESSION'); // Cek status login
     
-    // Update Menu Text & Icon (Phosphor Icons)
+    // Update Teks Login/Logout
     if(authText && authIcon) {
-        if(isAdmin) {
-            authText.innerText = "Logout Admin";
-            authIcon.classList.remove('ph-lock-key');
-            authIcon.classList.add('ph-lock-key-open'); // Icon Terbuka
+        if(session) {
+            // JIKA SUDAH LOGIN (Siapapun): Tampilkan Logout
+            authText.innerText = "Logout";
+            // Ganti ikon gembok jadi ikon pintu keluar
+            authIcon.className = "ph ph-sign-out"; 
+            
+            // Tambahkan warna merah biar jelas ini tombol keluar (Opsional)
+            authIcon.style.color = "#ef4444"; 
         } else {
-            authText.innerText = "Admin Access";
-            authIcon.classList.remove('ph-lock-key-open');
-            authIcon.classList.add('ph-lock-key'); // Icon Terkunci
+            // JIKA BELUM LOGIN
+            authText.innerText = "Login";
+            authIcon.className = "ph ph-sign-in";
+            authIcon.style.color = ""; // Reset warna
         }
     }
 
-    // Fitur Khusus Admin (Tampilkan/Sembunyikan)
+    // DAFTAR MENU KHUSUS ADMIN
     const elementsToToggle = [
         'btnRollOver',      
         'nav-import',       
         'nav-swap',         
         'btnAddAgent',      
         'btnResetShifts',   
-        'btnEditBulletin'   
+        'btnEditBulletin',
+        'navLogHistory' 
     ];
+    
+    // Toggle My Account (Hanya untuk Agent)
+    const btnAccount = document.getElementById('navMyAccount');
+    if (btnAccount) {
+        if (isAdmin) {
+             btnAccount.style.setProperty('display', 'none', 'important');
+        } else {
+             btnAccount.style.removeProperty('display');
+             btnAccount.style.display = 'flex'; 
+        }
+    }
 
+    // Toggle Menu Admin
     elementsToToggle.forEach(id => {
         const el = document.getElementById(id);
         if(el) {
-            // Import/Swap pakai 'flex', sisanya 'block' atau 'inline-flex'
-            const displayType = (id === 'nav-import' || id === 'nav-swap' || id === 'btnAddAgent') ? 'flex' : 'block';
-            el.style.display = isAdmin ? displayType : 'none';
+            if (isAdmin) {
+                el.style.removeProperty('display');
+                if(getComputedStyle(el).display === 'none') el.style.display = 'flex';
+            } else {
+                el.style.setProperty('display', 'none', 'important');
+            }
         }
     });
 }
+
 
 // --- LOGIKA HAMBURGER MENU ---
 function toggleMenu() {
@@ -102,13 +129,19 @@ window.onclick = function(event) {
 }
 
 function handleAuthAction() {
-    toggleMenu(); // Tutup menu
-    if(isAdmin) {
-        doLogout();
+    toggleMenu(); // Tutup menu hamburger
+    
+    const session = localStorage.getItem('SHIFT_APP_SESSION');
+    
+    if (session) {
+        // [GANTI] Pakai Modal Kustom
+        askConfirmation('logout'); 
     } else {
-        showLoginModal();
+        location.reload();
     }
 }
+
+
 
 function showLoginModal() {
     document.getElementById('loginModal').style.display = 'flex';
@@ -130,19 +163,81 @@ function doLogin() {
     }
 }
 
+// =========================================
+// FITUR LIHAT PASSWORD (MATA)
+// =========================================
+
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('adminPassInput');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    // Cek tipe input saat ini
+    if (passwordInput.type === 'password') {
+        // UBAH JADI TEXT (TERLIHAT)
+        passwordInput.type = 'text';
+        
+        // Ganti ikon jadi mata dicoret (slash)
+        eyeIcon.classList.remove('ph-eye');
+        eyeIcon.classList.add('ph-eye-slash');
+    } else {
+        // KEMBALIKAN JADI PASSWORD (SENSOR)
+        passwordInput.type = 'password';
+        
+        // Ganti ikon jadi mata biasa
+        eyeIcon.classList.remove('ph-eye-slash');
+        eyeIcon.classList.add('ph-eye');
+    }
+}
+
+// Ganti fungsi doLogout yang lama (jika ada) dengan ini:
 function doLogout() {
-    localStorage.removeItem(AUTH_KEY);
+    // Hapus sesi dari memori
+    localStorage.removeItem('SHIFT_APP_SESSION');
+    localStorage.removeItem('AUTH_KEY'); // Hapus key lama juga jika ada
+    
     isAdmin = false;
+    
+    // Reload halaman agar kembali ke Lock Screen
     location.reload(); 
 }
 
+
+// =========================================
+// UPDATE: PERMISSION CHECK DENGAN MODAL
+// =========================================
+
 function checkPermission() {
     if(!isAdmin) {
-        alert("🔒 Access Denied! Please Login as Admin.");
+        // HAPUS atau Comment baris alert lama:
+        // alert("🔒 Access Denied! Please Login as Admin.");
+        
+        // GANTI dengan pemanggil modal baru:
+        showAccessDeniedModal();
         return false;
     }
     return true;
 }
+
+// --- FUNGSI HELPER MODAL ACCESS DENIED ---
+
+function showAccessDeniedModal() {
+    const modal = document.getElementById('accessDeniedModal');
+    if(modal) {
+        modal.style.display = 'flex';
+        // Efek getar HP (Haptic)
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+    }
+}
+
+function closeAccessDeniedModal() {
+    document.getElementById('accessDeniedModal').style.display = 'none';
+}
+
+function openLoginFromWarning() {
+    closeAccessDeniedModal(); // Tutup peringatan
+    showLoginModal();         // Buka form login
+}
+
 
 // ==========================================================
 // 4. DATA HANDLING (LOAD & SAVE)
@@ -152,7 +247,6 @@ async function initData() {
     checkAuth(); 
     initTheme(); 
 
-    // Handle Loading UI
     const loadingLayer = document.getElementById("loadingLayer");
     
     try {
@@ -170,74 +264,80 @@ async function initData() {
         shiftDataCurrent = data.shifts || []; 
         shiftDataNext = data.shiftsNext || Array(masterData.length).fill().map(() => Array(7).fill(0));
         bulletinMessage = data.bulletin || "No new announcements.";
+        accessLogs = data.accessLogs || []; 
         lastUpdateTime = data.lastUpdate || "-";
         
         updateTimeBadge();
 
-        // Sinkronisasi jika agent bertambah
+        // Migrasi Data (Password Default)
+        let needMigration = false;
+        if (masterData.length > 0 && !masterData[0].password) {
+            console.log("Migrating database...");
+            masterData.forEach(agent => { agent.password = "123456"; });
+            needMigration = true;
+        }
+
         if(shiftDataNext.length < masterData.length) {
              const diff = masterData.length - shiftDataNext.length;
              for(let i=0; i<diff; i++) shiftDataNext.push([0,0,0,0,0,0,0]);
         }
 
         renderBulletin(); 
+        if (needMigration) await saveAllSilent();
 
-        // Hide Loading Layer Properly
         if(loadingLayer) loadingLayer.style.display = 'none';
         
     } catch (error) {
         console.error(error);
-        alert("Failed to load data! Using dummy/offline mode.");
-        if(loadingLayer) loadingLayer.style.display = 'none';
-        
-        // Dummy Data Fallback
-        masterData = [{spv:"System", name:"Error Load", role:"Agent"}];
-        shiftDataCurrent = [[0,0,0,0,0,0,0]];
-        shiftDataNext = [[0,0,0,0,0,0,0]];
+        alert("Failed to load data!");
     }
     
-    populateProfileSelector();
-    highlightMyRow(); 
+    prepareLockScreen(); 
     
-    renderAlphabetBar();
-    
-    refreshAllViews();
-    
+    // [UPDATE] MUNCULKAN LOCK SCREEN SETIAP SAAT (Disable Auto-Login)
     setTimeout(() => {
         const loader = document.getElementById('preloader');
         if(loader) {
-            loader.classList.add('preloader-hidden');
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
             
-            // Hapus elemen dari DOM agar tidak menghalangi klik (opsional)
-            setTimeout(() => { loader.style.display = 'none'; }, 500);
+            setTimeout(() => { 
+                loader.style.display = 'none'; 
+                
+                // SELALU MUNCULKAN MODAL LOGIN (Agar alur jelas)
+                const authModal = document.getElementById('initialAuthModal');
+                if(authModal) {
+                    authModal.style.display = 'flex';
+                    authModal.style.opacity = '1';
+                }
+            }, 300);
         }
-    }, 800); // Delay 0.8 detik agar user sempat melihat GIF-nya (efek estetik)
-    
-    }
-
+    }, 1500);
+}
 
 async function saveAll() {
-    if(!isAdmin) return;
-
-    showToast("Saving...", "process");
-
-    // --- BUAT WAKTU SEKARANG ---
+    // 1. Update Waktu Terakhir Simpan
     const now = new Date();
-    const timeString = now.toLocaleDateString('en-GB', { 
-        weekday: 'short', day: 'numeric', month: 'short' 
-    }) + " • " + now.toLocaleTimeString('en-GB', { 
-        hour: '2-digit', minute: '2-digit', hour12: false 
-    });
+    lastUpdateTime = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + " " + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    // Update Badge Jam di Header
+    updateTimeBadge(); 
 
+    // 2. Siapkan Data yang Mau Disimpan
     const payload = { 
         master: masterData, 
-        shifts: shiftDataCurrent,
+        shifts: shiftDataCurrent, 
         shiftsNext: shiftDataNext,
         bulletin: bulletinMessage,
-        lastUpdate: timeString 
+        accessLogs: accessLogs, 
+        lastUpdate: lastUpdateTime 
     }
 
+    // 3. Tampilkan Toast "Sedang Menyimpan..."
+    showToast("Saving changes...", "process");
+
     try {
+        // 4. Kirim ke JSONBin (PUT Request)
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: 'PUT',
             headers: {
@@ -247,17 +347,52 @@ async function saveAll() {
             body: JSON.stringify(payload)
         });
 
-        if(!res.ok) throw new Error("Save failed");
-
-        lastUpdateTime = timeString;
-        updateTimeBadge();
-        showToast("Data Saved Successfully!", "success");
-
-    } catch (error) {
-        console.error(error);
-        alert("Failed to save data!");
+        if (res.ok) {
+            console.log("Save Success");
+            showToast("Data Saved Successfully!", "success");
+        } else {
+            throw new Error("Server rejected save");
+        }
+    } catch (e) { 
+        console.error("Save failed", e); 
+        showToast("Failed to Save Data! Check Internet.", "error");
     }
 }
+
+
+// Tambahkan fungsi save silent (tanpa notifikasi toast)
+async function saveAllSilent() {
+    // [PENTING] Baris "if(!isAdmin) return;" SUDAH DIHAPUS DISINI.
+    // Ini wajib agar Agent bisa menyimpan password mereka sendiri ke database.
+    
+    const now = new Date();
+    // Format waktu simpel untuk log
+    const timeString = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + " • " + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    const payload = { 
+        master: masterData, 
+        shifts: shiftDataCurrent, 
+        shiftsNext: shiftDataNext,
+        bulletin: bulletinMessage,
+        accessLogs: accessLogs, 
+        lastUpdate: lastUpdateTime 
+    }
+
+    try {
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log("Data saved silently (Log/Password).");
+    } catch (e) { 
+        console.error("Silent save failed", e); 
+    }
+}
+
 
 // ==========================================================
 // 5. FITUR: BULLETIN BOARD & DUAL WEEK
@@ -270,14 +405,46 @@ function renderBulletin() {
     }
 }
 
-function editBulletin() {
-    if(!checkPermission()) return;
-    const newText = prompt("Update Announcement:", bulletinMessage);
-    if(newText !== null) { 
-        bulletinMessage = newText;
-        renderBulletin();
-        saveAll(); 
+// =========================================
+// LOGIKA MODAL BULLETIN (PENGUMUMAN)
+// =========================================
+
+function openBulletinModal() {
+    const modal = document.getElementById('editBulletinModal');
+    const textarea = document.getElementById('bulletinInputArea');
+    
+    // Masukkan teks pengumuman yang sekarang ke dalam textarea
+    // Kita ambil dari variabel global bulletinMessage (dari script sebelumnya)
+    textarea.value = bulletinMessage || ""; 
+    
+    modal.style.display = 'flex';
+    textarea.focus();
+}
+
+function closeBulletinModal() {
+    document.getElementById('editBulletinModal').style.display = 'none';
+}
+
+function saveBulletinFromModal() {
+    const newVal = document.getElementById('bulletinInputArea').value;
+    
+    if(!newVal.trim()) {
+        alert("Announcement cannot be empty!");
+        return;
     }
+
+    // Update variable global
+    bulletinMessage = newVal;
+    
+    // Update tampilan di layar
+    renderBulletin(); 
+    
+    // Simpan ke database
+    saveAll(); 
+    
+    // Tutup modal
+    closeBulletinModal();
+    showToast("Announcement Updated!", "success");
 }
 
 function getActiveShiftData() {
@@ -300,18 +467,11 @@ function switchWeekMode() {
 
 function promoteNextToCurrent() {
     if(!checkPermission()) return;
-    if(!confirm("⚠️ Overwrite THIS WEEK with NEXT WEEK data?")) return;
-
-    shiftDataCurrent = JSON.parse(JSON.stringify(shiftDataNext));
-    shiftDataNext = Array(masterData.length).fill().map(() => Array(7).fill(0));
-
-    currentViewMode = 'current';
-    document.getElementById('weekSelector').value = 'current';
-
-    saveAll();
-    refreshAllViews();
-    showToast("Roll Over Successful!", "success");
+    
+    // [GANTI] Pakai Modal Kustom
+    askConfirmation('rollover');
 }
+
 
 // ==========================================================
 // 6. UI UTAMA (DASHBOARD, TABLE, DLL)
@@ -395,11 +555,22 @@ function renderTables() {
                     const type = shiftTypes[val] || shiftTypes[0]; 
                     const isTodayCell = (d === todayColIdx) ? 'today-col' : '';
 
-                    tableHtml += `<td class="${isTodayCell}">
-                        <button class="cell-btn ${type.class}" onclick="cycleShift(${globalIndex}, ${d})">${type.code}</button>
-                    </td>`;
+                    // Kita gunakan onmousedown/onmouseup (untuk PC) DAN ontouchstart/ontouchend (untuk HP)
+// Perhatikan kita menghapus 'onclick' biasa dan menggantinya dengan logika handleRelease
+tableHtml += `<td class="${isTodayCell}">
+    <button class="cell-btn ${type.class}" 
+        onmousedown="startPress(${globalIndex}, ${d})" 
+        onmouseup="handleRelease(${globalIndex}, ${d})" 
+        onmouseleave="cancelPress()"
+        ontouchstart="startPress(${globalIndex}, ${d})" 
+        ontouchend="handleRelease(${globalIndex}, ${d})"
+    >
+        ${type.code}
+    </button>
+</td>`;
+
                 }
-                tableHtml += `</tr>`;
+                                tableHtml += `</tr>`;
             }
         });
         tableHtml += `</tbody></table>`;
@@ -860,31 +1031,29 @@ function renderMiniSchedule(agentIdx, elementId) {
 }
 
 function performSwap() {
+    // 1. Cek Izin Admin
     if(!checkPermission()) return; 
+    
     const i1 = document.getElementById("swapAgent1").value;
     const i2 = document.getElementById("swapAgent2").value;
     
-    // Ambil checkbox yang dicentang
+    // Ambil checkbox hari yang dicentang
     const days = [];
     document.querySelectorAll('.swap-day:checked').forEach(cb => days.push(cb.value));
 
-    if(i1 === "" || i2 === "" || i1 === i2 || days.length === 0) {
-        return alert("Invalid swap configuration!");
+    // 2. Validasi Input
+    if(i1 === "" || i2 === "") {
+        return showToast("Please select both Agent A and Agent B!", "error");
+    }
+    if(i1 === i2) {
+        return showToast("Cannot swap shift with the same person!", "error");
+    }
+    if(days.length === 0) {
+        return showToast("Please select at least one day!", "error");
     }
     
-    let targetArray = getActiveShiftData();
-    days.forEach(d => {
-        const temp = targetArray[i1][d];
-        targetArray[i1][d] = targetArray[i2][d];
-        targetArray[i2][d] = temp;
-    });
-    
-    setActiveShiftData(targetArray);
-    saveAll(); refreshAllViews(); 
-    showToast("Swap Successful!", "success");
-    
-    // Reset Checkbox
-    document.querySelectorAll('.swap-day').forEach(cb => cb.checked = false);
+    // 3. Panggil Modal Konfirmasi (Kirim data swap sebagai objek)
+    askConfirmation('swap', { agent1: i1, agent2: i2, days: days });
 }
 
 // --- AGENT MANAGEMENT ---
@@ -921,65 +1090,118 @@ function renderAgentList() {
     
     list.innerHTML = "";
 
-    // --- STEP 1: FILTER BERDASARKAN HURUF ---
-    let filteredData = masterData.map((agent, index) => ({ ...agent, originalIndex: index }));
-    
-    if (selectedFilterLetter !== 'ALL') {
-        filteredData = filteredData.filter(agent => 
-            agent.name.toUpperCase().startsWith(selectedFilterLetter)
-        );
-    }
-    
-    // Update Badge Total sesuai filter
-    if(totalBadge) totalBadge.innerText = `Total: ${filteredData.length}`;
-
-    // Jika kosong
-    if(filteredData.length === 0) {
-        list.innerHTML = `<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">
-            No agent found starting with "${selectedFilterLetter}"
-        </div>`;
-        return;
-    }
-
-    // --- STEP 2: SORTING ABJAD (A-Z) ---
-    filteredData.sort((a, b) => a.name.localeCompare(b.name));
-
-    // --- STEP 3: RENDER ---
-    filteredData.forEach((a) => {
-        const i = a.originalIndex; // PENTING: Pakai index asli untuk Edit/Delete
-        const role = a.role || "Agent"; 
-        
+    // --- HELPER: Fungsi untuk render item agent ---
+    const createAgentItem = (agent, index) => {
+        const role = agent.role || "Agent"; 
         let roleBadgeHTML = "";
-        if(role === "TL") roleBadgeHTML = `<span class="mini-badge" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74;">TL</span>`;
-        if(role === "SME") roleBadgeHTML = `<span class="mini-badge" style="background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe;">SME</span>`;
+        
+        if(role === "TL") roleBadgeHTML = `<span class="mini-badge" style="background:rgba(249, 115, 22, 0.1); color:#f97316; border:1px solid rgba(249, 115, 22, 0.3);">TL</span>`;
+        if(role === "SME") roleBadgeHTML = `<span class="mini-badge" style="background:rgba(168, 85, 247, 0.1); color:#a855f7; border:1px solid rgba(168, 85, 247, 0.3);">SME</span>`;
 
-        const initials = getInitials(a.name);
-        const avatarColor = stringToColor(a.name);
+        const initials = getInitials(agent.name);
+        const avatarColor = stringToColor(agent.name);
 
         let actionButtons = "";
         if (isAdmin) {
             actionButtons = `<div style="display:flex; gap:8px;">
-                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${i})"><i class="ph ph-pencil-simple"></i></button>
-                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${i})"><i class="ph ph-trash"></i></button>
+                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${index})"><i class="ph ph-pencil-simple"></i></button>
+                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${index})"><i class="ph ph-trash"></i></button>
             </div>`;
         }
 
-        list.innerHTML += `
+        return `
         <li class="agent-item">
             <div class="agent-avatar" style="background-color: ${avatarColor};">
                 ${initials}
             </div>
             <div class="agent-info-wrapper">
                 <span class="agent-name-text">
-                    ${a.name} ${roleBadgeHTML}
+                    ${agent.name} ${roleBadgeHTML}
                 </span>
                 <span class="agent-role-text">
-                    ${a.spv} <span style="margin:0 4px">•</span> ${role}
+                    ${agent.spv} <span style="margin:0 4px">•</span> ${role}
                 </span>
             </div>
             ${actionButtons}
         </li>`;
-    });
+    };
+
+    // --- STEP 1: SIAPKAN DATA AWAL ---
+    // Kita simpan index asli agar fungsi Edit/Delete tetap jalan
+    let baseData = masterData.map((agent, index) => ({ ...agent, originalIndex: index }));
+    
+    // Filter Huruf (A-Z) tetap jalan untuk semua mode
+    if (selectedFilterLetter !== 'ALL') {
+        baseData = baseData.filter(agent => 
+            agent.name.toUpperCase().startsWith(selectedFilterLetter)
+        );
+    }
+    
+    // Update Badge Total
+    if(totalBadge) totalBadge.innerText = `Total: ${baseData.length}`;
+
+    // --- STEP 2: LOGIKA RENDERING KHUSUS "SUPPORT" ---
+    if (selectedTagFilter === 'Support') {
+        
+        // A. Ambil Data TL & SME
+        const tlList = baseData.filter(a => a.role === 'TL');
+        const smeList = baseData.filter(a => a.role === 'SME');
+        
+        // Sorting Nama
+        tlList.sort((a, b) => a.name.localeCompare(b.name));
+        smeList.sort((a, b) => a.name.localeCompare(b.name));
+
+        // B. Render Judul "Team Leader"
+        if(tlList.length > 0) {
+            list.innerHTML += `
+            <div style="padding: 15px 15px 5px 15px; background:var(--bg-body); border-bottom:1px solid var(--border);">
+                <span style="font-size:11px; font-weight:700; color:#f97316; text-transform:uppercase; letter-spacing:1px;">
+                    <i class="ph ph-star-four" style="margin-right:4px;"></i> Team Leaders
+                </span>
+            </div>`;
+            tlList.forEach(agent => {
+                list.innerHTML += createAgentItem(agent, agent.originalIndex);
+            });
+        }
+
+        // C. Render Judul "SME"
+        if(smeList.length > 0) {
+            list.innerHTML += `
+            <div style="padding: 20px 15px 5px 15px; background:var(--bg-body); border-bottom:1px solid var(--border);">
+                <span style="font-size:11px; font-weight:700; color:#a855f7; text-transform:uppercase; letter-spacing:1px;">
+                    <i class="ph ph-lightning" style="margin-right:4px;"></i> SME / Support
+                </span>
+            </div>`;
+            smeList.forEach(agent => {
+                list.innerHTML += createAgentItem(agent, agent.originalIndex);
+            });
+        }
+
+        // Jika Kosong
+        if(tlList.length === 0 && smeList.length === 0) {
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">No Support staff found.</div>`;
+        }
+
+    } else {
+        // --- STEP 3: LOGIKA RENDERING BIASA (HIJRYAN, SILVIA, DST) ---
+        
+        let filteredData = baseData;
+        
+        if (selectedTagFilter !== 'ALL') {
+            filteredData = filteredData.filter(agent => agent.spv === selectedTagFilter);
+        }
+
+        if(filteredData.length === 0) {
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">No agent found.</div>`;
+            return;
+        }
+
+        filteredData.sort((a, b) => a.name.localeCompare(b.name));
+
+        filteredData.forEach(agent => {
+            list.innerHTML += createAgentItem(agent, agent.originalIndex);
+        });
+    }
 }
 
 function renderAlphabetBar() {
@@ -1023,88 +1245,178 @@ function renderAlphabetBar() {
     });
 }
 
+function renderTagsBar() {
+    const container = document.getElementById('tagsContainer');
+    if(!container) return;
+    
+    container.innerHTML = "";
+    
+    // Daftar Tag
+    const tags = ["ALL", "Hijryan", "Silvia", "Farikha", "Support"];
+    
+    tags.forEach(tag => {
+        const btn = document.createElement("div");
+        const isActive = (selectedTagFilter === tag);
+        
+        btn.className = `tag-btn ${isActive ? 'active' : ''}`;
+        
+        // --- BAGIAN INI YANG DIUBAH ---
+        if(tag === "ALL") {
+            btn.innerText = "All Teams";
+        } 
+        else if(tag === "Support") {
+            btn.innerText = "Support"; // Cukup "Support" saja (tanpa TL/SME)
+        } 
+        else {
+            btn.innerText = tag;
+        }
+        // -----------------------------
+        
+        btn.onclick = () => {
+            if (selectedTagFilter === tag && tag !== "ALL") {
+                selectedTagFilter = 'ALL';
+            } else {
+                selectedTagFilter = tag;
+            }
+            renderTagsBar();   
+            renderAgentList(); 
+        };
+        
+        container.appendChild(btn);
+    });
+}
+
 function openModal(mode, idx) {
     if(!checkPermission()) return; 
-    document.getElementById('agentModal').style.display = 'flex';
+    
+    const modal = document.getElementById('agentModal');
+    const passInput = document.getElementById('modalAgentPassword');
+    const eyeIcon = document.getElementById('eyeAgent');
+    
+    // Reset Tampilan Icon Mata & Input Type
+    if(passInput) passInput.type = "password";
+    if(eyeIcon) eyeIcon.className = "ph ph-eye";
+
+    modal.style.display = 'flex';
     document.getElementById('editIndex').value = mode === 'add' ? -1 : idx;
     
     if(mode !== 'add') {
+        // MODE EDIT: Isi data agent yang ada
+        const agent = masterData[idx];
         document.getElementById('modalTitle').innerText = "Edit Agent";
-        document.getElementById('modalName').value = masterData[idx].name;
-        document.getElementById('modalTeam').value = masterData[idx].spv;
-        document.getElementById('modalRole').value = masterData[idx].role || "Agent"; 
+        document.getElementById('modalName').value = agent.name;
+        document.getElementById('modalTeam').value = agent.spv;
+        document.getElementById('modalRole').value = agent.role || "Agent"; 
+        
+        // [BARU] Isi Password
+        // Jika password belum ada (data lama), default ke "123456"
+        if(passInput) passInput.value = agent.password || "123456";
+        
     } else { 
+        // MODE ADD: Kosongkan form
         document.getElementById('modalTitle').innerText = "Add New Agent";
         document.getElementById('modalName').value = ""; 
         document.getElementById('modalRole').value = "Agent"; 
+        
+        // [BARU] Default Password untuk Agent Baru
+        if(passInput) passInput.value = "123456"; 
     }
 }
 
 function saveAgent() {
     if(!checkPermission()) return; 
+    
     const name = document.getElementById('modalName').value;
     const spv = document.getElementById('modalTeam').value;
     const role = document.getElementById('modalRole').value; 
+    
+    // [BARU] Ambil value password
+    const password = document.getElementById('modalAgentPassword').value;
+    
     const idx = document.getElementById('editIndex').value;
 
     if(!name) return alert("Name required!");
+    if(!password) return alert("Password required!"); // Validasi
 
     if(idx == -1) { 
-        masterData.push({ name, spv, role }); 
+        // LOGIKA TAMBAH BARU
+        masterData.push({ 
+            name, 
+            spv, 
+            role,
+            password: password // Simpan password input
+        }); 
         shiftDataCurrent.push([0,0,0,0,0,0,0]); 
         shiftDataNext.push([0,0,0,0,0,0,0]); 
     } else { 
+        // LOGIKA EDIT (UPDATE)
         masterData[idx].name = name; 
         masterData[idx].spv = spv; 
         masterData[idx].role = role; 
+        masterData[idx].password = password; // Update password
     }
+    
     document.getElementById('agentModal').style.display='none';
     saveAll(); refreshAllViews();
+    showToast("Agent Data Saved!", "success");
 }
 
 function deleteAgent(idx) {
     if(!checkPermission()) return; 
-    if(confirm("Are you sure you want to delete this agent?")) { 
-        masterData.splice(idx,1); 
-        shiftDataCurrent.splice(idx,1); 
-        shiftDataNext.splice(idx,1); 
-        saveAll(); refreshAllViews(); 
-    }
+    askConfirmation('delete_agent', idx);
 }
 
 function resetAll() { 
     if(!checkPermission()) return; 
-    if(confirm("⚠️ RESET ALL SHIFTS for this week? This cannot be undone.")) { 
-        if(currentViewMode === 'current') {
-            shiftDataCurrent = shiftDataCurrent.map(()=>[0,0,0,0,0,0,0]);
-        } else {
-            shiftDataNext = shiftDataNext.map(()=>[0,0,0,0,0,0,0]);
-        }
-        saveAll(); refreshAllViews(); 
-    } 
+    
+    // [GANTI] Pakai Modal Kustom
+    askConfirmation('reset');
 }
+
 
 // ==========================================================
 // 7. UTILITIES (IMPORT, EXPORT, REPORT)
 // ==========================================================
 
+// Variabel sementara untuk menampung data import
+let tempImportData = null;
+
 function importRawJson() {
     if(!checkPermission()) return; 
     const rawText = document.getElementById('jsonImportArea').value;
     if (!rawText.trim()) return alert("JSON Area Empty!");
+    
     try {
         const parsedData = JSON.parse(rawText);
         if (Array.isArray(parsedData.master) && Array.isArray(parsedData.shifts)) {
-            if(confirm("Overwrite Database with this JSON?")) {
-                masterData = parsedData.master;
-                shiftDataCurrent = parsedData.shifts;
-                shiftDataNext = parsedData.shiftsNext || Array(masterData.length).fill().map(()=>Array(7).fill(0));
-                bulletinMessage = parsedData.bulletin || "";
-                saveAll(); refreshAllViews();
-                showToast("Database Restored!", "success");
-            }
-        } else { alert("Invalid JSON Format!"); }
-    } catch (e) { alert("Error Parsing JSON"); }
+            
+            // Simpan ke variabel sementara
+            tempImportData = parsedData;
+            
+            // Tampilkan Konfirmasi Modal
+            askConfirmation('import_json');
+            
+        } else { 
+            alert("Invalid JSON Format!"); 
+        }
+    } catch (e) { 
+        alert("Error Parsing JSON"); 
+    }
+}
+
+// Fungsi pembantu yang dipanggil oleh executeConfirmedAction
+function finalizeImport() {
+    if (tempImportData) {
+        masterData = tempImportData.master;
+        shiftDataCurrent = tempImportData.shifts;
+        shiftDataNext = tempImportData.shiftsNext || Array(masterData.length).fill().map(()=>Array(7).fill(0));
+        bulletinMessage = tempImportData.bulletin || "";
+        
+        saveAll(); refreshAllViews();
+        showToast("Database Restored!", "success");
+        
+        tempImportData = null; // Reset
+    }
 }
 
 function copyCurrentJson() {
@@ -1174,44 +1486,169 @@ function exportToCSV() {
     showToast("Excel/CSV Downloaded!", "success");
 }
 
-// --- WHATSAPP REPORT ---
+// --- LOGIKA LONG PRESS (TEKAN TAHAN) ---
+let pressTimer;
+let isLongPress = false;
+let selectedCell = { idx: -1, day: -1 };
+
+function startPress(idx, day) {
+    // [PERBAIKAN KEAMANAN]
+    // Cek apakah user adalah Admin?
+    // Jika BUKAN admin, langsung berhenti. Menu tidak akan muncul.
+    if (!isAdmin) return; 
+
+    isLongPress = false; // Reset status
+    
+    // Mulai timer 600ms (0.6 detik)
+    pressTimer = setTimeout(() => {
+        isLongPress = true; // Tandai ini sebagai Long Press
+        openQuickMenu(idx, day);
+        
+        // Getar HP sedikit (Haptic Feedback) agar terasa mantap
+        if (navigator.vibrate) navigator.vibrate(50);
+    }, 600);
+}
+
+function cancelPress() {
+    clearTimeout(pressTimer);
+}
+
+// Fungsi yang dipanggil saat tombol dilepas
+function handleRelease(idx, day) {
+    clearTimeout(pressTimer);
+    
+    // Jika user BUKAN admin, biarkan fungsi cycleShift yang menangani alert "Access Denied"
+    // cycleShift sudah punya pengaman checkPermission() di dalamnya.
+    
+    if (!isLongPress) {
+        // Jika hanya tap cepat (bukan tahan), jalankan fungsi ganti shift biasa
+        cycleShift(idx, day);
+    }
+    
+    // Reset status
+    isLongPress = false;
+}
+
+// --- LOGIKA QUICK MENU ---
+function openQuickMenu(idx, day) {
+    // Double check keamanan
+    if (!checkPermission()) return;
+    
+    selectedCell = { idx, day };
+    document.getElementById('quickMenu').style.display = 'flex';
+}
+
+function closeQuickMenu() {
+    document.getElementById('quickMenu').style.display = 'none';
+}
+
+function setShiftDirect(val) {
+    // [PERBAIKAN KEAMANAN]
+    // Pastikan user masih admin saat tombol diklik
+    if (!checkPermission()) return;
+    
+    if (selectedCell.idx === -1) return;
+    
+    // Update data
+    let targetArray = getActiveShiftData();
+    targetArray[selectedCell.idx][selectedCell.day] = val;
+    setActiveShiftData(targetArray);
+    
+    // Simpan & Refresh
+    saveAll();
+    refreshAllViews();
+    closeQuickMenu();
+}
+
+
+// =========================================
+// FITUR REPORT WHATSAPP (MINIMALIST / CLEAN)
+// =========================================
+
 function copyScheduleText() {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const jsDay = new Date().getDay(); 
-    const todayName = days[jsDay];
+    // 1. SETUP TANGGAL
+    const date = new Date();
+    // Format: "Sunday, 25 Jan 2026"
+    const dateString = date.toLocaleDateString('en-GB', { 
+        weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' 
+    });
+    
+    // Setup Index Hari
+    const jsDay = date.getDay(); 
     let todayIdx = jsDay - 1; 
     if (todayIdx === -1) todayIdx = 6; 
 
     const activeShifts = getActiveShiftData();
-    let groups = { "🌞 MORNING": [], "🌤 AFTERNOON": [], "🌙 NIGHT": [] };
+    
+    // 2. GROUPING DATA
+    let groups = { "MORNING": [], "AFTERNOON": [], "NIGHT": [] };
 
+    // 3. FILL DATA
     masterData.forEach((agent, idx) => {
         const val = activeShifts[idx][todayIdx];
-        if (val === 0 || val === 4 || val === 5 || val === 6) return; // Skip OFF
+        
+        // Skip OFF/VL/LOA/BL
+        if (val === 0 || val === 4 || val === 5 || val === 6) return; 
         
         let dName = agent.name;
-        if (agent.role === "TL") dName += " (TL)";
-        else if (agent.role === "SME") dName += " (SME)";
+        let isPriority = 2; 
 
-        if (val === 1) groups["🌞 MORNING"].push(dName);
-        else if (val === 2) groups["🌤 AFTERNOON"].push(dName);
-        else if (val === 3) groups["🌙 NIGHT"].push(dName);
+        // Formatting Nama (Clean, tanpa emoji)
+        if (agent.role === "TL") {
+            dName = `*${dName}* (TL)`; // Bold untuk TL
+            isPriority = 0;
+        } 
+        else if (agent.role === "SME") {
+            dName = `${dName} (SME)`;
+            isPriority = 1;
+        }
+
+        const entry = { name: dName, priority: isPriority };
+
+        if (val === 1) groups["MORNING"].push(entry);
+        else if (val === 2) groups["AFTERNOON"].push(entry);
+        else if (val === 3) groups["NIGHT"].push(entry);
     });
 
-    let report = `*SHIFT REPORT - ${todayName.toUpperCase()}*\n----------------------------------\n`;
-    for (const [title, names] of Object.entries(groups)) {
-        if (names.length > 0) {
-            // Count Regular Agents Only (Exclude TL/SME from count)
-            const regCount = names.filter(n => !n.includes("(TL)") && !n.includes("(SME)")).length;
-            report += `*${title} (${regCount})*\n`;
-            names.forEach(n => report += `▫️ ${n}\n`);
-            report += `\n`;
-        }
-    }
-    report += `----------------------------------\n_Generated by Shift Manager_`;
+    // 4. GENERATE CLEAN REPORT
+    // Header Simpel & Tegas
+    let report = `*DAILY SHIFT REPORT*\n`;
+    report += `${dateString.toUpperCase()}\n`; // Uppercase agar terlihat formal
+    report += `──────────────────────\n`;
 
-    navigator.clipboard.writeText(report);
-    showToast("Report Copied to Whatsapp!", "success");
+    const renderSection = (title, list) => {
+        if (list.length === 0) return "";
+        
+        // Sorting: TL -> SME -> Abjad
+        list.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            return a.name.localeCompare(b.name);
+        });
+
+        // Format Section: "MORNING [9]"
+        let section = `\n*${title}* [${list.length}]\n`;
+        list.forEach(item => {
+            // Gunakan bullet point simpel
+            section += `• ${item.name}\n`; 
+        });
+        return section;
+    };
+
+    report += renderSection("MORNING", groups["MORNING"]);
+    report += renderSection("AFTERNOON", groups["AFTERNOON"]);
+    report += renderSection("NIGHT", groups["NIGHT"]);
+
+    report += `\n──────────────────────\n`;
+    report += `_Generated by Shift Manager_`;
+
+    // 5. COPY ACTION
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(report).then(() => {
+            showToast("Report Copied!", "success");
+        }).catch(err => fallbackCopyText(report));
+    } else {
+        fallbackCopyText(report);
+    }
 }
 
 // ==========================================================
@@ -1387,5 +1824,579 @@ function clearHighlight() {
     document.querySelectorAll('.cell-btn').forEach(btn => btn.classList.remove('highlighted-shift'));
 }
 
+
+// =========================================
+// LOGIKA KONFIRMASI AKSI (CONSISTENT POP-UP)
+// =========================================
+
+// Global Variables untuk menyimpan status aksi
+var pendingActionType = null; 
+var pendingActionData = null; // [BARU] Untuk menyimpan data tambahan (misal: index agent yg mau dihapus)
+
+// Fungsi Membuka Modal Konfirmasi
+function askConfirmation(type, data = null) {
+    const modal = document.getElementById('confirmActionModal');
+    const msgEl = document.getElementById('confirmMessageText');
+    
+    if(!modal || !msgEl) return; // Safety check
+
+    // Simpan tipe aksi dan data (jika ada)
+    pendingActionType = type;
+    pendingActionData = data;
+    
+    // ATUR PESAN SESUAI TIPE AKSI
+    let message = "Are you sure?";
+
+    if (type === 'image') message = "Download Schedule as Image?";
+    else if (type === 'report') message = "Copy Report to WhatsApp?";
+    else if (type === 'excel') message = "Export Data to Excel?";
+    
+    // --- TAMBAHAN BARU ---
+    else if (type === 'logout') message = "Are you sure you want to Logout?";
+    else if (type === 'reset') message = "⚠️ RESET ALL SHIFTS? This cannot be undone.";
+    else if (type === 'delete_agent') message = `Delete agent "${masterData[data].name}" permanently?`;
+    else if (type === 'rollover') message = "⚠️ Overwrite THIS WEEK with NEXT WEEK data?";
+    else if (type === 'import_json') message = "⚠️ Overwrite Database with this JSON?";
+    else if (type === 'restore_default') message = "Restore default settings?";
+   
+    // [TAMBAHAN BARU]
+    else if (type === 'clear_logs') message = "⚠️ Clear ALL login history? This cannot be undone.";
+    else if (type === 'swap') message = "Confirm shift swap for selected agents?";  
+
+    msgEl.innerText = message;
+    
+    // Tampilkan Modal
+    modal.style.display = 'flex';
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmActionModal');
+    if(modal) modal.style.display = 'none';
+    
+    // Reset variabel setelah delay animasi (agar tidak konflik jika dibuka cepat)
+    setTimeout(() => { 
+        pendingActionType = null; 
+        pendingActionData = null;
+    }, 500);
+}
+
+// Fungsi Eksekusi Saat Tombol "Yes, Proceed" Diklik
+// Fungsi Eksekusi Saat Tombol "Yes, Proceed" Diklik
+function executeConfirmedAction() {
+    // 1. AMBIL & AMANKAN DATA DULU (Penting!)
+    // Kita simpan ke variabel lokal agar tidak hilang saat modal ditutup
+    const action = pendingActionType;
+    const data = pendingActionData; 
+    
+    // 2. Tutup modal
+    const modal = document.getElementById('confirmActionModal');
+    if(modal) modal.style.display = 'none';
+
+    // 3. Reset variabel global agar bersih untuk aksi berikutnya
+    pendingActionType = null;
+    pendingActionData = null;
+
+    // 4. Eksekusi Aksi (dengan jeda sedikit agar mulus)
+    setTimeout(() => {
+        
+        // --- EXISTING ACTIONS ---
+        if (action === 'image') downloadScheduleAsImage();
+        else if (action === 'report') copyScheduleText();
+        else if (action === 'excel') exportToCSV();
+        else if (action === 'logout') doLogout();
+        
+        // --- RESET SHIFTS ---
+        else if (action === 'reset') {
+            if(currentViewMode === 'current') {
+                shiftDataCurrent = shiftDataCurrent.map(()=>[0,0,0,0,0,0,0]);
+            } else {
+                shiftDataNext = shiftDataNext.map(()=>[0,0,0,0,0,0,0]);
+            }
+            saveAll(); refreshAllViews();
+            showToast("Schedule Reset Successful", "success");
+        }
+
+        // --- DELETE AGENT ---
+        else if (action === 'delete_agent') {
+            if (data !== null && data > -1) {
+                masterData.splice(data, 1); 
+                shiftDataCurrent.splice(data, 1); 
+                shiftDataNext.splice(data, 1); 
+                saveAll(); refreshAllViews(); 
+                showToast("Agent Deleted", "success");
+            }
+        }
+
+        // --- ROLLOVER ---
+        else if (action === 'rollover') {
+            shiftDataCurrent = JSON.parse(JSON.stringify(shiftDataNext));
+            shiftDataNext = Array(masterData.length).fill().map(() => Array(7).fill(0));
+            currentViewMode = 'current';
+            document.getElementById('weekSelector').value = 'current';
+            saveAll(); refreshAllViews();
+            showToast("Roll Over Successful!", "success");
+        }
+
+        // --- IMPORT & RESTORE ---
+        else if (action === 'import_json') finalizeImport();
+        
+        else if (action === 'clear_logs') {
+            accessLogs = []; 
+            saveAllSilent(); 
+            openLogHistoryModal(); 
+            showToast("Login History Cleared!", "success");
+        }
+
+        // --- [FIX] SWAP SHIFTS ---
+        else if (action === 'swap') {
+            // Safety Check: Pastikan data ada
+            if (!data || !data.agent1 || !data.agent2) {
+                return showToast("Swap failed: Missing data.", "error");
+            }
+
+            const idx1 = parseInt(data.agent1); // Pastikan angka
+            const idx2 = parseInt(data.agent2); // Pastikan angka
+            const days = data.days;
+
+            let targetArray = getActiveShiftData();
+
+            // Proses Tukar Jadwal
+            days.forEach(dayStr => {
+                const d = parseInt(dayStr); // Pastikan index hari angka
+                
+                // Simpan nilai lama Agent 1
+                const temp = targetArray[idx1][d];
+                
+                // Tukar
+                targetArray[idx1][d] = targetArray[idx2][d];
+                targetArray[idx2][d] = temp;
+            });
+            
+            // Simpan Perubahan
+            // Note: setActiveShiftData sebenarnya tidak wajib jika kita mengedit array by reference,
+            // tapi kita panggil untuk memastikan konsistensi pointer.
+            setActiveShiftData(targetArray);
+            
+            saveAll(); 
+            refreshAllViews(); 
+            
+            // Reset Checkbox di UI
+            document.querySelectorAll('.swap-day').forEach(cb => cb.checked = false);
+            
+            showToast("Shifts Swapped Successfully!", "success");
+        }
+
+    }, 300); // Delay 300ms
+}
+
+function requestClearLogs() {
+    // Cek apakah ada log untuk dihapus
+    if (!accessLogs || accessLogs.length === 0) {
+        return showToast("Log is already empty.", "error");
+    }
+    
+    // Hanya Admin yang boleh hapus (Opsional, hapus baris ini jika semua boleh hapus)
+    if (!isAdmin) {
+        showAccessDeniedModal();
+        return;
+    }
+
+    // Panggil Modal Konfirmasi
+    askConfirmation('clear_logs');
+}
+
+
+
 // START APP
 initData();
+
+// =========================================
+// LOGIKA INITIAL LOCK SCREEN (WAJIB ADA)
+// =========================================
+
+// 1. Fungsi untuk mengisi Dropdown Nama (Dipanggil saat initData)
+function prepareLockScreen() {
+    const sel = document.getElementById('loginUserSelect');
+    if(!sel) return; 
+    
+    sel.innerHTML = ""; 
+
+    // Opsi Admin
+    const optAdmin = document.createElement('option');
+    optAdmin.value = "ADMIN_SYSTEM";
+    optAdmin.text = "Administrator";
+    optAdmin.style.fontWeight = "bold";
+    sel.appendChild(optAdmin);
+
+    // Separator
+    const optSep = document.createElement('option');
+    optSep.disabled = true;
+    optSep.text = "──────────────";
+    sel.appendChild(optSep);
+
+    // Masukkan Agent (Diurutkan A-Z)
+    if(masterData && masterData.length > 0) {
+        const sortedAgents = [...masterData].map((agent, index) => ({...agent, originalIndex: index}))
+                                            .sort((a, b) => a.name.localeCompare(b.name));
+
+        sortedAgents.forEach(agent => {
+            const opt = document.createElement('option');
+            opt.value = agent.originalIndex; 
+            opt.text = agent.name;
+            sel.appendChild(opt);
+        });
+    }
+}
+
+// 2. Fungsi Tombol Mata (Lihat Password) - INI YANG MISSING
+function toggleInitialPassword() {
+    const input = document.getElementById('initialPassInput');
+    const icon = document.getElementById('eyeIconInitial');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('ph-eye');
+        icon.classList.add('ph-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('ph-eye-slash');
+        icon.classList.add('ph-eye');
+    }
+}
+
+// 3. Fungsi Tombol "Unlock Dashboard" - INI YANG MISSING
+// A. UPDATE LOGIKA LOGIN (Cari fungsi processInitialLogin dan TIMPA bagian Skenario Agent)
+function processInitialLogin() {
+    const userVal = document.getElementById('loginUserSelect').value;
+    const passVal = document.getElementById('initialPassInput').value;
+    
+    const PASS_ADMIN = "ipulyganteng";
+
+    // --- HELPER LOG ---
+    const recordLogin = (name, role) => {
+        const now = new Date();
+        const timeString = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + " • " + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        if(!accessLogs) accessLogs = []; // Safety check
+        accessLogs.unshift({ name: name, role: role, time: timeString });
+        if(accessLogs.length > 50) accessLogs.pop();
+        // saveAllSilent(); // Opsional: aktifkan jika ingin auto-save log
+    };
+
+    // --- SKENARIO 1: ADMIN ---
+    if (userVal === "ADMIN_SYSTEM") {
+        if (passVal === PASS_ADMIN) {
+            isAdmin = true;
+            localStorage.setItem('SHIFT_APP_SESSION', 'ADMIN');
+            recordLogin("Administrator", "Super User");
+            finishLoginProcess();
+            showToast("Welcome, Admin!", "success");
+        } else {
+            alert("Wrong Admin Password!");
+        }
+    } 
+    
+    // --- SKENARIO 2: AGENT ---
+    else {
+        const agent = masterData[userVal];
+
+        if (agent) {
+            const correctPass = agent.password || "123456";
+
+            // Loose comparison (==) biar aman angka vs string
+            if (passVal == correctPass) {
+                isAdmin = false; 
+                localStorage.setItem('my_profile_id', userVal);
+                localStorage.setItem('SHIFT_APP_SESSION', 'AGENT');
+                
+                recordLogin(agent.name, "Agent");
+
+                finishLoginProcess();
+                showToast("Login Success!", "success");
+                
+                // [BARU] Cek Password Default -> Tampilkan Modal Keren
+                if(passVal === "123456") {
+                    setTimeout(() => {
+                        showSecurityWarning(); // Panggil fungsi modal baru
+                    }, 800);
+                }
+            } else {
+                alert("Wrong Password for " + agent.name);
+            }
+        } else {
+            alert("User data not found!");
+        }
+    }
+}
+
+// B. TAMBAHKAN FUNGSI BARU DI PALING BAWAH FILE
+// =========================================
+// LOGIKA MODAL AKUN & SECURITY
+// =========================================
+
+// 1. Fungsi Buka Modal "My Account" (Yang tadi tidak jalan)
+// 1. Fungsi Helper Toggle Password (Wajib ada)
+function togglePass(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    // Safety Check: Pastikan elemen ada sebelum diubah
+    if (!input || !icon) return;
+    
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("ph-eye");
+        icon.classList.add("ph-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("ph-eye-slash");
+        icon.classList.add("ph-eye");
+    }
+}
+
+// 2. Fungsi Utama Modal Akun (VERSI BARU)
+function openAccountModal() {
+    const myId = localStorage.getItem('my_profile_id');
+    const modal = document.getElementById('accountModal');
+    
+    // Safety Check: Pastikan Modal HTML sudah dipasang
+    if(!modal) return alert("Error: HTML Modal Akun belum dipasang/salah ID.");
+
+    // Reset Input & Icon ke kondisi awal (tertutup)
+    const inpNew = document.getElementById('accNewPass');
+    const inpCurr = document.getElementById('accCurrentPass');
+    const eye1 = document.getElementById('eye1');
+    const eye2 = document.getElementById('eye2');
+
+    if(inpNew) { inpNew.value = ""; inpNew.type = "password"; }
+    if(inpCurr) { inpCurr.type = "password"; }
+    if(eye1) { eye1.className = "ph ph-eye"; }
+    if(eye2) { eye2.className = "ph ph-eye"; }
+
+    // --- SKENARIO 1: ADMIN ---
+    if (isAdmin) {
+        document.getElementById('profileAvatarBig').innerText = "A";
+        document.getElementById('profileAvatarBig').style.background = "#f59e0b"; // Orange
+        document.getElementById('profileNameBig').innerText = "Administrator";
+        document.getElementById('profileRoleBig').innerText = "Super User";
+        
+        if(inpCurr) inpCurr.value = "ipulyganteng"; // Admin pass hardcoded
+        
+        modal.style.display = 'flex';
+        return;
+    }
+
+    // --- SKENARIO 2: AGENT ---
+    if (myId && masterData[myId]) {
+        const agent = masterData[myId];
+        
+        // 1. Set Nama & Role
+        document.getElementById('profileNameBig').innerText = agent.name;
+        document.getElementById('profileRoleBig').innerText = agent.role || "Agent";
+        
+        // 2. Set Avatar Inisial (Logic MSF)
+        const initials = agent.name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .substring(0, 3)
+            .toUpperCase();
+            
+        const avatarEl = document.getElementById('profileAvatarBig');
+        avatarEl.innerText = initials;
+        avatarEl.style.background = "#3b82f6"; // Biru Default
+
+        // 3. Set Current Password
+        if(inpCurr) inpCurr.value = agent.password || "123456";
+
+        modal.style.display = 'flex';
+    } else {
+        // Jika profil tidak ditemukan (misal habis clear cache), minta login ulang
+        alert("Session expired. Please login again.");
+        location.reload();
+    }
+}
+
+
+// 2. Fungsi Simpan Password Baru
+function saveNewPassword() {
+    const myId = localStorage.getItem('my_profile_id');
+    const newPass = document.getElementById('accNewPass').value;
+
+    if (!newPass || newPass.length < 4) {
+        alert("Password too short! Minimum 4 characters.");
+        return;
+    }
+
+    if (myId && masterData[myId]) {
+        masterData[myId].password = newPass;
+        
+        // Simpan ke server (JSONBin)
+        if(typeof saveAllSilent === "function") {
+            saveAllSilent();
+        } else {
+            // Fallback jika fungsi silent belum ada
+            console.warn("saveAllSilent not found, saving locally only for now.");
+        }
+        
+        document.getElementById('accountModal').style.display = 'none';
+        showToast("Password Updated Successfully!", "success");
+    }
+}
+
+// 3. Fungsi Security Warning (Pop-up Kuning)
+function showSecurityWarning() {
+    const modal = document.getElementById('securityWarningModal');
+    if(modal) modal.style.display = 'flex';
+}
+
+function closeSecurityWarning() {
+    document.getElementById('securityWarningModal').style.display = 'none';
+}
+
+// 4. Shortcut dari Warning langsung ke Ganti Password
+function openChangePasswordDirectly() {
+    // 1. Coba tutup warning dulu
+    const warningModal = document.getElementById('securityWarningModal');
+    if (warningModal) {
+        warningModal.style.display = 'none';
+    }
+
+    // 2. Coba buka modal akun
+    const accountModal = document.getElementById('accountModal');
+    if (accountModal) {
+        // Panggil fungsi pembuka yang sudah ada logic pengisian datanya
+        openAccountModal(); 
+    } else {
+        // JIKA HTML HILANG, TAMPILKAN ALERT (Bukan Error Console)
+        alert("ERROR: Modal Akun hilang dari index.html! Silakan copy kode HTML langkah no 1.");
+    }
+}
+
+// 4. Fungsi Penutup (Membuka Dashboard)
+function finishLoginProcess() {
+    // 1. Sembunyikan Lock Screen
+    const modal = document.getElementById('initialAuthModal');
+    if(modal) modal.style.display = 'none';
+
+    // 2. Jalankan render UI
+    populateProfileSelector(); // Dropdown tetap diisi untuk keperluan logic
+    highlightMyRow(); 
+    renderAlphabetBar();
+    renderTagsBar();
+    refreshAllViews();
+    
+    // 3. Update UI Admin
+    updateUIForAdmin();
+
+    // ===============================================
+    // [UPDATE] LOGIKA TAMPILAN PROFILE (KARTU VS DROPDOWN)
+    // ===============================================
+    const dropdownWrapper = document.getElementById('profileSelectWrapper');
+    const cardWrapper = document.getElementById('lockedProfileCard');
+
+    if (!isAdmin) {
+        // --- MODE AGENT (TAMPILKAN KARTU) ---
+        if(dropdownWrapper) dropdownWrapper.style.display = 'none'; // Sembunyikan Dropdown
+        if(cardWrapper) cardWrapper.style.display = 'flex';         // Tampilkan Kartu
+
+        // Isi Data ke Kartu
+        // Ambil ID profil dari localStorage
+        const myId = localStorage.getItem('my_profile_id');
+        
+        if (myId !== null && masterData[myId]) {
+            const agent = masterData[myId];
+            
+            // Set Nama
+            document.getElementById('lpName').innerText = agent.name;
+            
+            // Set Avatar (Inisial & Warna)
+            const initials = getInitials(agent.name);
+            const color = stringToColor(agent.name);
+            
+            const avatarEl = document.getElementById('lpAvatar');
+            avatarEl.innerText = initials;
+            avatarEl.style.backgroundColor = color;
+        }
+
+    } else {
+        // --- MODE ADMIN (TAMPILKAN DROPDOWN) ---
+        if(dropdownWrapper) dropdownWrapper.style.display = 'block';
+        if(cardWrapper) cardWrapper.style.display = 'none';
+        
+        // Pastikan dropdown aktif
+        const sel = document.getElementById('myProfileSelector');
+        if(sel) sel.disabled = false;
+    }
+}
+
+function openLogHistoryModal() {
+    const modal = document.getElementById('logHistoryModal');
+    if (!modal) return;
+
+    const list = document.getElementById('logListContainer');
+    list.innerHTML = "";
+
+    // 1. Cek Data Kosong
+    if (!accessLogs || accessLogs.length === 0) {
+        list.innerHTML = `<li style="padding:40px 20px; text-align:center; color:var(--text-sub); display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <i class="ph ph-scroll" style="font-size:32px; opacity:0.3;"></i>
+            <span style="font-size:13px;">No login history found.</span>
+        </li>`;
+    } else {
+        // 2. Render List
+        accessLogs.forEach(log => {
+            const li = document.createElement('li');
+            li.style.cssText = "padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;";
+
+            // LOGIKA INISIAL & ICON
+            let initials = "";
+            let bgClass = "avatar-agent"; // Default Biru
+
+            if (log.role === 'Super User' || log.name === 'Administrator') {
+                // HILANGKAN MAHKOTA, GANTI JADI "A"
+                initials = "A";
+                bgClass = "avatar-admin"; // Orange (Pastikan CSS avatar-admin sudah ada di style.css)
+            } else {
+                // KASUS AGENT: Ambil inisial (Misal: MSF)
+                initials = log.name
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .substring(0, 3)
+                    .toUpperCase();
+            }
+
+            // HTML Item
+            li.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="log-avatar ${bgClass}">
+                        ${initials}
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600; font-size:13px; color:var(--text-main);">${log.name}</span>
+                        <span style="font-size:11px; color:var(--text-sub);">${log.role}</span>
+                    </div>
+                </div>
+                <div style="font-size:10px; font-weight:600; color:var(--text-sub); background:var(--bg-input); padding:4px 8px; border-radius:6px;">
+                    ${log.time.split('•')[1] || log.time}
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    modal.style.display = 'flex';
+}
+
+// =========================================
+// FITUR AKUN SAYA (PROFILE MANAGEMENT)
+// =========================================
+
+// 1. Fungsi Helper Toggle Password (Wajib ada)
+
+
+// 2. Fungsi Utama Modal Akun (VERSI UPDATE)
+
+
+

@@ -535,7 +535,10 @@ th.today-col { color: var(--primary); }
 .modal-header { padding: 20px; border-bottom: 1px solid var(--border); }
 .modal-body { padding: 20px; }
 .modal-footer { padding: 15px 20px; background: var(--bg-input); display: flex; justify-content: flex-end; gap: 10px; }
-.modal-footer.vertical { flex-direction: column; }
+.modal-footer.vertical {
+    flex-direction: column;
+    gap: 10px;
+}
 
 /* Loading Spinner Modern */
 .loading-overlay {
@@ -1541,4 +1544,755 @@ ul.agent-list {
     visibility: hidden;
 }
 
+/* =========================================
+   FIX: DARK MODE VISIBILITY (VL, BL, LOA)
+   ========================================= */
 
+[data-theme="dark"] {
+    --bg-body: #0f172a;       
+    --bg-card: #1e293b;       
+    --bg-input: #334155;      
+    
+    --text-main: #f1f5f9;     
+    --text-sub: #94a3b8;      
+    --border: #334155;        
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    
+    /* UPDATE: Warna Shift sedikit diterangkan untuk Dark Mode */
+    /* Agar border-top pada kartu dashboard terlihat */
+    --shift-vl: #15803d; /* Green 700 (Sedikit lebih terang dari #145a32) */
+    --shift-bl: #1d4ed8; /* Blue 700 (Sedikit lebih terang dari #1e3799) */
+    --shift-loa: #334155; /* Slate 700 */
+}
+
+/* 1. PERBAIKI WARNA TEXT DI DASHBOARD (SUMMARY) */
+/* Kita paksa warna teks menjadi terang saat dark mode aktif */
+
+[data-theme="dark"] .text-vl { 
+    color: #4ade80 !important; /* Light Green (Terbaca jelas di background gelap) */
+}
+
+[data-theme="dark"] .text-bl { 
+    color: #60a5fa !important; /* Light Blue */
+}
+
+[data-theme="dark"] .text-loa { 
+    color: #cbd5e1 !important; /* Light Slate */
+}
+
+/* 2. PERBAIKI VISIBILITAS TOMBOL LOA DI TABEL */
+/* Tambahkan border yang lebih terang agar tidak terlihat seperti lubang */
+
+[data-theme="dark"] .bg-loa { 
+    background: var(--shift-loa) !important; 
+    color: #f8fafc !important; /* Text Putih Terang */
+    border: 1px solid #64748b !important; /* Border Abu Terang */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 3. PERBAIKI WARNA HEADER KARTU SUMMARY */
+/* Agar header kartu (kotak kecil di dashboard) tidak terlalu gelap */
+
+[data-theme="dark"] .card-vl .stat-head { 
+    background: rgba(20, 90, 50, 0.3); /* Hijau Transparan */
+    color: #4ade80; /* Teks Hijau Terang */
+}
+
+[data-theme="dark"] .card-bl .stat-head { 
+    background: rgba(30, 55, 153, 0.3); /* Biru Transparan */
+    color: #60a5fa; /* Teks Biru Terang */
+}
+
+[data-theme="dark"] .card-loa .stat-head { 
+    background: rgba(148, 163, 184, 0.1); 
+    color: #cbd5e1; 
+}
+
+/* =========================================
+   NEW: TAG FILTER BUTTONS (CHIPS)
+   ========================================= */
+
+.tag-btn {
+    padding: 6px 16px;
+    border-radius: 20px; /* Bentuk Kapsul/Lonjong */
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap; /* Agar teks tidak turun baris */
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Hover Effect */
+.tag-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--bg-card);
+}
+
+/* Active State */
+.tag-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+/* Dark Mode Adjustment (Optional safety) */
+[data-theme="dark"] .tag-btn {
+    background: #1e293b; /* Slate 800 */
+}
+[data-theme="dark"] .tag-btn.active {
+    background: var(--primary);
+}
+
+/* =========================================
+   FIX: TAGS WRAPPING (AGAR TERLIHAT SEMUA)
+   ========================================= */
+
+/* Override style container khusus untuk Tags */
+#tagsContainer.alphabet-scroll-wrapper {
+    flex-wrap: wrap !important;      /* Izinkan tombol turun ke baris baru */
+    overflow-x: visible !important;  /* Matikan scroll samping */
+    justify-content: center;         /* Posisi tombol di tengah rata */
+    height: auto !important;         /* Tinggi menyesuaikan isi */
+    gap: 8px;                        /* Jarak antar tombol */
+    padding-bottom: 10px;            /* Jarak bawah */
+}
+
+/* Opsional: Agar tombol sedikit lebih kecil/padat di HP agar muat banyak */
+.tag-btn {
+    padding: 6px 12px; 
+    flex-grow: 1; /* Agar tombol mengisi celah kosong */
+    max-width: 120px; /* Batasi lebar maksimal agar tidak kepanjangan */
+}
+
+/* =========================================
+   FIX: TOMBOL EDIT BULLETIN & MODAL
+   ========================================= */
+
+/* Style Tombol Edit "Pill" (Lonjong) */
+.btn-edit-pill {
+    background: rgba(255, 255, 255, 0.2); /* Transparan putih */
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: var(--text-main); /* Mengikuti warna tema */
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    margin-right: 10px; /* Jarak dengan panah dropdown */
+}
+
+/* Hover Effect */
+.btn-edit-pill:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Khusus Dark Mode: Warna teks disesuaikan */
+[data-theme="dark"] .btn-edit-pill {
+    color: #e2e8f0;
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Pastikan textarea di modal terlihat rapi */
+#bulletinInputArea {
+    width: 100%;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* =========================================
+   FIX: STYLING POP-UP MODAL EDIT BULLETIN
+   ========================================= */
+
+/* 1. Container Modal Card (Kotak Utamanya) */
+#editBulletinModal .modal-card {
+    background: var(--bg-card); /* Gunakan warna background kartu tema */
+    width: 90%;
+    max-width: 500px; /* Jangan terlalu lebar di layar besar */
+    border-radius: 16px; /* Sudut lebih membulat agar modern */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Bayangan lebih lembut */
+    border: 1px solid var(--border); /* Garis tepi halus */
+    overflow: hidden; /* Agar isi tidak keluar dari sudut membulat */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Bagian Header (Judul) */
+#editBulletinModal .modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-body); /* Sedikit beda warna agar kontras */
+}
+
+#editBulletinModal .modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* 3. Bagian Body (Tempat Textarea) */
+#editBulletinModal .modal-body {
+    padding: 24px;
+    flex-grow: 1;
+    background: var(--bg-card);
+}
+
+/* Text bantuan kecil di atas textarea */
+#editBulletinModal .modal-body p {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 4. Styling Textarea (Area ketik) */
+#bulletinInputArea {
+    width: 100%;
+    box-sizing: border-box; /* PENTING: agar padding tidak menambah lebar */
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-input); /* Warna background input sesuai tema */
+    color: var(--text-main);
+    border-radius: 10px;
+    font-family: inherit; /* Gunakan font website */
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical; /* Hanya boleh diubah tingginya */
+    outline: none;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Efek saat textarea diklik/fokus */
+#bulletinInputArea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Efek glow biru halus */
+    background: var(--bg-card);
+}
+
+/* 5. Bagian Footer (Tombol Aksi) */
+#editBulletinModal .modal-footer {
+    padding: 16px 24px;
+    background: var(--bg-body);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end; /* Tombol rata kanan */
+    gap: 12px; /* Jarak antar tombol */
+}
+
+/* Penyesuaian ukuran tombol di dalam modal ini */
+#editBulletinModal .modal-footer .btn {
+    padding: 8px 20px;
+    font-size: 13px;
+    border-radius: 8px;
+}
+
+/* =========================================
+   FIX: POSISI TOMBOL EDIT (SEJAJAR)
+   ========================================= */
+
+/* 1. Atur container agar berbaris ke samping (Horizontal) */
+.bulletin-actions {
+    display: flex;
+    align-items: center; /* Rata tengah secara vertikal */
+    gap: 8px; /* Jarak antara tombol Edit dan Panah */
+}
+
+/* 2. Rapikan tombol Edit agar ukurannya pas */
+.btn-edit-pill {
+    /* Reset margin lama jika ada */
+    margin-right: 0 !important; 
+    
+    /* Ukuran font dan padding yang proporsional */
+    font-size: 11px;
+    padding: 4px 10px;
+    height: 28px; /* Tinggi pasti agar sama rata */
+    border-radius: 14px;
+    
+    /* Warna background yang lebih "soft" agar tidak terlalu mencolok */
+    background: rgba(0, 0, 0, 0.05); 
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-main);
+}
+
+/* Hover effect */
+.btn-edit-pill:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Dark mode adjustment */
+[data-theme="dark"] .btn-edit-pill {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-main);
+}
+
+/* 3. Pastikan Panah juga rata tengah */
+#bulletinArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px; /* Samakan tinggi dengan tombol */
+    width: 28px;
+}
+
+/* =========================================
+   FIX: CONFIRMATION MODAL STYLES
+   ========================================= */
+
+/* Icon Lingkaran di Tengah Modal */
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    margin: 0 auto;
+}
+
+/* Warna khusus icon warning/tanya */
+.warning-icon {
+    background: #fff7ed; /* Orange muda */
+    color: #f97316;      /* Orange */
+    border: 1px solid #ffedd5;
+}
+
+[data-theme="dark"] .warning-icon {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(249, 115, 22, 0.2);
+}
+
+/* Helper Class untuk Text Rata Tengah */
+.center {
+    text-align: center;
+}
+
+/* Ukuran Modal Kecil */
+.small-modal {
+    max-width: 320px !important;
+}
+
+/* =========================================
+   FIX: AI INSIGHT DARK MODE
+   ========================================= */
+
+/* 1. Judul Hari (MONDAY, SUNDAY, dst) */
+/* Kita cari elemen di dalam #aiContentState yang punya style font besar */
+[data-theme="dark"] #aiContentState div[style*="font-size:18px"] {
+    color: #f1f5f9 !important; /* Putih Terang */
+}
+
+/* 2. Judul Shift (MORNING SHIFT, dll) & Label Kecil */
+[data-theme="dark"] #aiContentState span[style*="color:#7f8c8d"] {
+    color: #94a3b8 !important; /* Abu Terang */
+}
+
+/* 3. Teks Support (Support: Silvia, dll) */
+[data-theme="dark"] #aiContentState span[style*="color:#34495e"] {
+    color: #cbd5e1 !important; /* Abu agak Putih */
+}
+
+/* 4. Angka Jumlah Agent (9, 7, dll) */
+[data-theme="dark"] #aiContentState div[style*="font-size:16px"] {
+    color: #f1f5f9 !important; /* Putih */
+}
+
+/* 5. Kotak "UNAVAILABLE PERSONNEL" */
+/* Ubah background kotak putih menjadi gelap agar tidak silau */
+[data-theme="dark"] #aiContentState div[style*="background:#f8f9fa"] {
+    background: var(--bg-input) !important; /* Warna Abu Gelap (Slate 700/800) */
+    border: 1px solid var(--border) !important;
+}
+
+/* 6. Teks Angka di dalam kotak Unavailable (14 Off Duty, dll) */
+[data-theme="dark"] #aiContentState b[style*="color:#2c3e50"] {
+    color: #60a5fa !important; /* Biru Muda Terang */
+}
+
+/* 7. Garis Pembatas Halus */
+[data-theme="dark"] #aiContentState div[style*="border-bottom:1px solid #eee"] {
+    border-bottom: 1px solid var(--border) !important;
+}
+
+
+/* =========================================
+   FIX: AI INSIGHT DARK MODE & UI TWEAKS
+   ========================================= */
+
+/* 1. SEMBUNYIKAN TOMBOL "X" DI POJOK KANAN ATAS */
+/* Kita targetkan tombol di dalam header modal summary saja */
+#summaryModal .modal-header button {
+    display: none !important;
+}
+
+/* --- PERBAIKAN WARNA DARK MODE (FORCE OVERRIDE) --- */
+
+/* 2. Nama Support (Imam, Hijryan, Uci, dll) */
+/* Kita paksa semua span yang punya style warna gelap jadi abu terang */
+[data-theme="dark"] #aiContentState span[style*="color:#2c3e50"] {
+    color: #cbd5e1 !important; /* Abu Terang (Slate 300) */
+    font-weight: 400 !important; /* Sedikit tipiskan agar rapi */
+}
+
+/* 3. Label "Unavailable Personnel" (Off Duty, VL, LOA) */
+/* Text biasa di dalam kotak bawah */
+[data-theme="dark"] #aiContentState div[style*="font-size:12px; color:#555"] {
+    color: #94a3b8 !important; /* Abu Terang */
+}
+
+/* 4. Angka Detail (14 Off Duty, 3 VL, dll) */
+/* Angka yang di-bold (tag <b>) */
+[data-theme="dark"] #aiContentState b[style*="color:#2c3e50"] {
+    color: #60a5fa !important; /* Biru Muda Neon */
+}
+
+/* 5. Judul Kecil "UNAVAILABLE PERSONNEL" */
+[data-theme="dark"] #aiContentState span[style*="color:#7f8c8d"] {
+    color: #cbd5e1 !important; /* Abu Terang */
+}
+
+/* 6. Background Kotak Bawah */
+/* Ubah background putih kotak "Unavailable" jadi gelap */
+[data-theme="dark"] #aiContentState div[style*="background:#f8f9fa"] {
+    background: #334155 !important; /* Slate 700 (Abu Gelap) */
+    border: 1px solid #475569 !important; /* Border senada */
+}
+
+/* 7. Pastikan Judul Hari (MONDAY) tetap putih */
+[data-theme="dark"] #aiContentState div[style*="font-size:18px"] {
+    color: #ffffff !important;
+}
+
+/* --- Quick Menu (Mobile Friendly) --- */
+.quick-menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.quick-menu-box {
+    background: var(--bg-card);
+    width: 85%;
+    max-width: 320px;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: scaleIn 0.2s ease;
+}
+
+.qm-header {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-align: center;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+
+.qm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 Kolom */
+    gap: 10px;
+}
+
+.qm-btn {
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.qm-btn:active { transform: scale(0.95); }
+
+/* --- Password Toggle Style --- */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Pastikan input punya ruang di kanan agar teks tidak menabrak ikon */
+.password-input-wrapper input {
+    padding-right: 40px; /* Beri jarak untuk ikon */
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-sub); /* Mengikuti warna teks tema */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.toggle-password-btn:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--primary);
+}
+
+/* Penyesuaian Dark Mode untuk Hover */
+[data-theme="dark"] .toggle-password-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.toggle-password-btn i {
+    font-size: 18px;
+}
+
+/* --- Style untuk Profile Selector saat Terkunci --- */
+.modern-select:disabled {
+    background-color: transparent;
+    border: none;
+    color: var(--text-main);
+    font-weight: 700;     /* Tebal agar terlihat seperti Judul */
+    font-size: 14px;
+    padding-left: 0;      /* Rata kiri */
+    cursor: default;      /* Cursor panah biasa */
+    opacity: 1;           /* Mencegah warna pudar di iPhone/Android */
+    
+    /* Hilangkan panah bawaan browser */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* --- Locked Profile Card Styling --- */
+.locked-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: var(--bg-input); /* Warna latar lembut */
+    border: 1px solid var(--border);
+    border-radius: 12px; /* Sudut membulat */
+    margin-top: 5px;
+    transition: all 0.2s;
+}
+
+/* Avatar Bulat */
+.lp-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lp-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Isi ruang kosong */
+    overflow: hidden;
+}
+
+.lp-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Nama panjang jadi ... */
+}
+
+.lp-badge {
+    font-size: 10px;
+    color: var(--text-sub);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lp-icon {
+    font-size: 16px;
+    color: var(--text-sub);
+    opacity: 0.5;
+}
+
+/* Dark Mode Tweaks (Otomatis menyesuaikan variable tema) */
+[data-theme="dark"] .locked-profile-card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Paksa menu item agar transparan background-nya */
+.menu-item {
+    background: transparent !important; 
+    border: none !important;
+}
+
+/* Hanya beri warna saat di-hover */
+.menu-item:hover {
+    background: var(--bg-input) !important;
+}
+
+
+/* --- FINAL MENU STYLE (PASTI RAPI) --- */
+.menu-item {
+    display: flex !important;           /* KEMBALIKAN !important */
+    flex-direction: row !important;     /* Paksa berbaris ke samping */
+    align-items: center !important;     /* Rata tengah vertikal */
+    gap: 12px !important;               /* Jarak ikon ke teks */
+    padding: 12px !important;
+    width: 100% !important;
+    text-align: left !important;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box !important;
+}
+
+/* Pastikan teks tidak turun baris */
+.menu-item span {
+    white-space: nowrap !important;
+}
+
+.menu-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important; 
+    height: 24px !important;
+    flex-shrink: 0 !important; /* Jangan biarkan ikon gepeng */
+}
+
+/* --- LOG HISTORY AVATAR --- */
+.log-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Warna khusus */
+.avatar-admin { background: #f59e0b; } /* Orange untuk Admin */
+.avatar-agent { background: #3b82f6; } /* Biru untuk Agent */
+
+
+/* --- MODERN PROFILE MODAL --- */
+.profile-header-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    margin-bottom: 12px;
+    border: 4px solid var(--bg-card); /* Border putih agar terpisah dari background */
+}
+
+.profile-name-large {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.profile-role-badge {
+    font-size: 11px;
+    background: var(--bg-input);
+    color: var(--text-sub);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Update Wrapper Password agar icon mata pas */
+.password-input-group {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-group input {
+    padding-right: 45px !important; /* Beri ruang untuk icon mata */
+}
+
+.eye-btn-inside {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    background: transparent;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: color 0.2s;
+}
+
+.eye-btn-inside:hover {
+    color: var(--primary);
+}

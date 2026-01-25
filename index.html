@@ -50,28 +50,50 @@
             </button>
         </div>
 
-        <div id="mainMenu" class="dropdown-menu">
-            <div class="menu-section user-section">
-                <label class="menu-label"><i class="ph ph-user-circle"></i> Active Profile</label>
-                <div class="select-wrapper">
-                    <select id="myProfileSelector" onchange="setMyProfile()" class="modern-select">
-                        <option value="-1">Select your name</option>
-                    </select>
-                    <i class="ph ph-caret-down select-arrow"></i>
-                </div>
-            </div>
-            
-            <div class="menu-item" onclick="toggleTheme()">
-                <div class="menu-icon"><i class="ph ph-moon" id="themeIconMenu"></i></div>
-                <span id="themeText">Dark Mode</span>
-            </div>
-            
-            <div class="menu-separator"></div>
+ <div id="mainMenu" class="dropdown-menu">
+    <div class="menu-section user-section">
+        <label class="menu-label"><i class="ph ph-user-circle"></i> Active Profile</label>
+        
+        <div class="select-wrapper" id="profileSelectWrapper">
+            <select id="myProfileSelector" onchange="setMyProfile()" class="modern-select">
+                <option value="-1">Select your name</option>
+            </select>
+            <i class="ph ph-caret-down select-arrow"></i>
+        </div>
 
-            <div class="menu-item" id="authMenuItem" onclick="handleAuthAction()">
-                <div class="menu-icon"><i class="ph ph-lock-key" id="authIcon"></i></div>
-                <span id="authText">Admin Access</span>
+        <div id="lockedProfileCard" class="locked-profile-card" style="display: none;">
+            <div class="lp-avatar" id="lpAvatar">?</div>
+            <div class="lp-details">
+                <span class="lp-name" id="lpName">Loading...</span>
+                <span class="lp-badge">Verified Agent</span>
             </div>
+            <i class="ph ph-lock-key lp-icon"></i>
+        </div>
+    </div>
+    
+    <div class="menu-separator"></div>
+
+    <div class="menu-item" id="navMyAccount" onclick="openAccountModal()">
+        <div class="menu-icon"><i class="ph ph-user-gear"></i></div>
+        <span>My Account</span>
+    </div>
+
+    <div class="menu-item" onclick="toggleTheme()">
+        <div class="menu-icon"><i class="ph ph-moon" id="themeIconMenu"></i></div>
+        <span id="themeText">Dark Mode</span>
+    </div>
+    
+    <div class="menu-item" id="authMenuItem" onclick="handleAuthAction()">
+        <div class="menu-icon"><i class="ph ph-lock-key" id="authIcon"></i></div>
+        <span id="authText">Admin Access</span>
+    </div>
+
+    <div class="menu-item" id="navLogHistory" onclick="openLogHistoryModal()" style="display:none;">
+        <div class="menu-icon"><i class="ph ph-clock-counter-clockwise"></i></div>
+        <span>Login History</span>
+    </div>
+</div>
+            
         </div>
     </header>
 
@@ -109,23 +131,25 @@
 
         <div id="tab-home" class="page-section active">
             
-            <div class="bulletin-board">
-                <div class="bulletin-header" onclick="toggleBulletin()">
-                    <div class="bulletin-title">
-                        <i class="ph ph-bell-ringing text-warning"></i>
-                        <h4>Announcements</h4>
-                    </div>
-                    <div class="bulletin-actions">
-                        <button id="btnEditBulletin" onclick="event.stopPropagation(); editBulletin()" class="icon-btn-sm" style="display:none;">
-                            <i class="ph ph-pencil-simple"></i>
-                        </button>
-                        <i class="ph ph-caret-down" id="bulletinArrow"></i>
-                    </div>
-                </div>
-                <div id="bulletinContent" class="bulletin-content">
-                    <p id="bulletinText">No new announcements.</p>
-                </div>
-            </div>
+<div class="bulletin-board">
+    <div class="bulletin-header" onclick="toggleBulletin()">
+        <div class="bulletin-title">
+            <i class="ph ph-bell-ringing text-warning"></i>
+            <h4>Announcements</h4>
+        </div>
+        <div class="bulletin-actions">
+            
+            <button id="btnEditBulletin" onclick="event.stopPropagation(); openBulletinModal()" class="btn-edit-pill" style="display:none;">
+                <i class="ph ph-pencil-simple"></i> <span>Edit</span>
+            </button>
+            
+            <i class="ph ph-caret-down" id="bulletinArrow"></i>
+        </div>
+    </div>
+    <div id="bulletinContent" class="bulletin-content">
+        <p id="bulletinText">No new announcements.</p>
+    </div>
+</div>
 
             <div class="card controls-card" id="dashboardCard">
                 <div class="control-row">
@@ -275,16 +299,19 @@
         </div>
 
         <div class="action-buttons-row">
-            <button class="btn btn-icon-text btn-green" onclick="downloadScheduleAsImage()">
-                <i class="ph ph-image"></i> Save Image
-            </button>
-            <button class="btn btn-icon-text btn-whatsapp" onclick="copyScheduleText()">
-                <i class="ph ph-whatsapp-logo"></i> Report
-            </button>
-            <button class="btn btn-icon-text btn-blue" onclick="exportToCSV()">
-                <i class="ph ph-microsoft-excel-logo"></i> Excel
-            </button>
-        </div>
+    <button class="btn btn-icon-text btn-green" onclick="askConfirmation('image')">
+        <i class="ph ph-image"></i> Save Image
+    </button>
+    
+    <button class="btn btn-icon-text btn-whatsapp" onclick="askConfirmation('report')">
+        <i class="ph ph-whatsapp-logo"></i> Report
+    </button>
+    
+    <button class="btn btn-icon-text btn-blue" onclick="askConfirmation('excel')">
+        <i class="ph ph-microsoft-excel-logo"></i> Excel
+    </button>
+</div>
+
     </div>      
     
     <div id="mainContainer" class="schedule-container"></div>
@@ -383,6 +410,7 @@
             </div>
             
             <div id="alphabetContainer" class="alphabet-scroll-wrapper"></div>
+<div id="tagsContainer" class="alphabet-scroll-wrapper" style="padding-top: 0; margin-bottom: 10px;"></div>
 
             <div class="agent-list-wrapper">
                 <ul class="agent-list" id="agentListContainer"></ul>
@@ -428,36 +456,51 @@
             <div class="modal-header">
                 <h3 id="modalTitle">Manage Agent</h3>
             </div>
+            
             <div class="modal-body">
-                <input type="hidden" id="editIndex">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="modalName" class="modern-input" placeholder="Enter name">
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <div class="select-wrapper">
-                        <select id="modalRole" class="modern-select">
-                            <option value="Agent">Agent</option>
-                            <option value="TL">Team Leader</option>
-                            <option value="SME">SME</option>
-                        </select>
-                        <i class="ph ph-caret-down select-arrow"></i>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Team</label>
-                    <div class="select-wrapper">
-                        <select id="modalTeam" class="modern-select">
-                            <option value="Hijryan">Hijryan</option>
-                            <option value="Silvia">Silvia</option>
-                            <option value="Farikha">Farikha</option>
-                            <option value="Support">Support</option>
-                        </select>
-                        <i class="ph ph-caret-down select-arrow"></i>
-                    </div>
-                </div>
-            </div>
+    <input type="hidden" id="editIndex">
+    
+    <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="modalName" class="modern-input" placeholder="Enter name">
+    </div>
+
+    <div class="form-group">
+        <label>Login Password</label>
+        <div class="password-input-group">
+            <input type="password" id="modalAgentPassword" class="modern-input" placeholder="Enter password">
+            <button type="button" class="eye-btn-inside" onclick="togglePass('modalAgentPassword', 'eyeAgent')">
+                <i class="ph ph-eye" id="eyeAgent"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Role</label>
+        <div class="select-wrapper">
+            <select id="modalRole" class="modern-select">
+                <option value="Agent">Agent</option>
+                <option value="TL">Team Leader</option>
+                <option value="SME">SME</option>
+            </select>
+            <i class="ph ph-caret-down select-arrow"></i>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Team</label>
+        <div class="select-wrapper">
+            <select id="modalTeam" class="modern-select">
+                <option value="Hijryan">Hijryan</option>
+                <option value="Silvia">Silvia</option>
+                <option value="Farikha">Farikha</option>
+                <option value="Support">Support</option>
+            </select>
+            <i class="ph ph-caret-down select-arrow"></i>
+        </div>
+    </div>
+</div>
+
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="document.getElementById('agentModal').style.display='none'">Cancel</button>
                 <button class="btn btn-primary" onclick="saveAgent()">Save Changes</button>
@@ -472,34 +515,234 @@
                 <h3>Admin Access</h3>
                 <p>Enter your password to continue</p>
             </div>
-            <div class="modal-body">
-                <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••">
-            </div>
+            
+            <div class="password-input-wrapper">
+    <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••">
+    
+    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()">
+        <i class="ph ph-eye" id="eyeIcon"></i>
+    </button>
+</div>
+
             <div class="modal-footer vertical">
                 <button class="btn btn-primary full" onclick="doLogin()">Access Dashboard</button>
                 <button class="btn btn-ghost full" onclick="document.getElementById('loginModal').style.display='none'">Cancel</button>
             </div>
         </div>
     </div>
+    
+    <div id="editBulletinModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Update Announcement</h3>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:12px; color:var(--text-sub); margin-bottom:8px;">Write your message below:</p>
+            <textarea id="bulletinInputArea" class="modern-textarea" rows="4" placeholder="Type announcement here..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeBulletinModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveBulletinFromModal()">Publish</button>
+        </div>
+    </div>
+    </div>
+
+<div id="confirmActionModal" class="modal-overlay">
+    <div class="modal-card small-modal">
+        <div class="modal-header center" style="border-bottom:none; padding-bottom:0;">
+            <div class="icon-circle warning-icon">
+                <i class="ph ph-question"></i>
+            </div>
+            <h3 style="margin-top:10px;">Confirmation</h3>
+        </div>
+        <div class="modal-body center" style="padding-top:5px; padding-bottom:20px;">
+            <p id="confirmMessageText" style="color:var(--text-sub); font-size:13px;">Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeConfirmModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="executeConfirmedAction()">Yes, Proceed</button>
+        </div>
+    </div>
+</div>
+
+<div id="quickMenu" class="quick-menu-overlay" onclick="closeQuickMenu()">
+    <div class="quick-menu-box">
+        <div class="qm-header">Select Shift</div>
+        <div class="qm-grid">
+            <button class="qm-btn bg-p" onclick="setShiftDirect(1)">Morning (P)</button>
+            <button class="qm-btn bg-s" onclick="setShiftDirect(2)">Afternoon (S)</button>
+            <button class="qm-btn bg-m" onclick="setShiftDirect(3)">Night (M)</button>
+            <button class="qm-btn bg-o" onclick="setShiftDirect(0)">OFF</button>
+            <button class="qm-btn bg-vl" onclick="setShiftDirect(4)">VL</button>
+            <button class="qm-btn bg-loa" onclick="setShiftDirect(5)">LOA</button>
+            <button class="qm-btn bg-bl" onclick="setShiftDirect(6)">BL</button>
+        </div>
+        <button class="btn btn-ghost mt-2" onclick="closeQuickMenu()">Cancel</button>
+    </div>
+</div>
+
+<div id="accessDeniedModal" class="modal-overlay">
+    <div class="modal-card small-modal">
+        <div class="modal-header center" style="border-bottom:none; padding-bottom:0;">
+            <div class="icon-circle" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <i class="ph ph-lock-key"></i>
+            </div>
+            <h3 style="margin-top:10px;">Access Restricted</h3>
+        </div>
+        <div class="modal-body center" style="padding-top:5px; padding-bottom:20px;">
+            <p style="color:var(--text-sub); font-size:13px;">
+                You need <b>Admin</b> privileges to perform this action.
+            </p>
+        </div>
+        <div class="modal-footer vertical">
+            <button class="btn btn-primary full" onclick="openLoginFromWarning()">
+                <i class="ph ph-sign-in"></i> Login as Admin
+            </button>
+            <button class="btn btn-ghost full" onclick="closeAccessDeniedModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
     <div id="saveStatus" class="toast-notification">
         <i class="ph ph-check-circle"></i>
         <span>Data Saved</span>
     </div>
+    
+   <div id="logHistoryModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="ph ph-list-dashes"></i> Login Activity</h3>
+            <p style="font-size:11px; color:var(--text-sub);">Last 50 Logins</p>
+        </div>
+        <div class="modal-body" style="padding:0; max-height:400px; overflow-y:auto;">
+            <ul id="logListContainer" style="list-style:none; padding:0; margin:0;">
+                </ul>
+        </div>
+                <div class="modal-footer" style="justify-content: space-between;">
+            <button class="btn btn-outline" style="border-color:#ef4444; color:#ef4444; padding:8px 15px;" onclick="requestClearLogs()">
+                <i class="ph ph-trash"></i> Clear
+            </button>
+            
+            <button class="btn btn-ghost" onclick="document.getElementById('logHistoryModal').style.display='none'">Close</button>
+        </div>
 
-    <script src="script.js"></script>
-    <script>
-    window.addEventListener('load', function() {
-        // Tunggu maksimal 3 detik, lalu paksa hilangkan loader
-        setTimeout(function() {
-            const loader = document.getElementById('preloader');
-            if (loader) {
-                loader.style.opacity = '0';
-                loader.style.visibility = 'hidden';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            }
-        }, 3000); // 3000ms = 3 detik
-    });
+    </div>
+</div> <div id="accountModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-body" style="padding-top: 30px;">
+            
+            <div class="profile-header-section">
+                <div id="profileAvatarBig" class="profile-avatar-large">MSF</div>
+                <div id="profileNameBig" class="profile-name-large">Loading...</div>
+                <div id="profileRoleBig" class="profile-role-badge">Agent</div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border); margin:0 0 20px 0;">
+
+            <div class="form-group">
+                <label>Current Password</label>
+                <div class="password-input-group">
+                    <input type="password" id="accCurrentPass" class="modern-input" readonly value="Loading...">
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accCurrentPass', 'eye1')">
+                        <i class="ph ph-eye" id="eye1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>New Password</label>
+                <div class="password-input-group">
+                    <input type="password" id="accNewPass" class="modern-input" placeholder="Create new password">
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accNewPass', 'eye2')">
+                        <i class="ph ph-eye" id="eye2"></i>
+                    </button>
+                </div>
+                <p style="font-size:10px; color:var(--text-sub); margin-top:5px;">Minimum 4 characters</p>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="document.getElementById('accountModal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" onclick="saveNewPassword()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="securityWarningModal" class="modal-overlay" style="z-index: 3000;">
+    <div class="modal-card small-modal">
+        <div class="modal-header center" style="border-bottom:none; padding-bottom:0;">
+            <div class="icon-circle warning-icon">
+                <i class="ph ph-warning"></i>
+            </div>
+            <h3 style="margin-top:10px;">Security Alert</h3>
+        </div>
+        <div class="modal-body center" style="padding-top:5px; padding-bottom:20px;">
+            <p style="color:var(--text-main); font-weight:600; font-size:14px; margin-bottom:5px;">Default Password Detected</p>
+            <p style="color:var(--text-sub); font-size:13px;">
+                You are using the default password (123456). Please change it now to secure your account.
+            </p>
+        </div>
+        <div class="modal-footer vertical">
+            <button class="btn btn-primary full" onclick="openChangePasswordDirectly()">
+                <i class="ph ph-lock-key-open"></i> Change Password Now
+            </button>
+            <button class="btn btn-ghost full" onclick="closeSecurityWarning()">I'll do it later</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js?v=2"></script>
+
+<script>
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const loader = document.getElementById('preloader');
+        if (loader) {
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
+            setTimeout(() => { loader.style.display = 'none'; }, 500);
+        }
+    }, 3000);
+});
 </script>
+
+<div id="initialAuthModal" class="modal-overlay" style="z-index: 9999; display: none;">
+    <div class="modal-card small-modal">
+        <div class="modal-header center">
+            <div class="icon-circle" style="background:var(--bg-input); color:var(--primary);">
+                <i class="ph ph-user-focus"></i>
+            </div>
+            <h3 style="margin-top:10px;">Welcome Back</h3>
+            <p style="font-size:12px; color:var(--text-sub);">Please identify yourself to continue</p>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-group" style="margin-bottom:15px;">
+                <label style="font-size:11px; margin-bottom:5px; display:block; font-weight:600;">Who are you?</label>
+                <div class="select-wrapper">
+                    <select id="loginUserSelect" class="modern-select">
+                        <option>Loading users...</option> 
+                    </select>
+                    <i class="ph ph-caret-down select-arrow"></i>
+                </div>
+            </div>
+
+            <div class="password-input-wrapper">
+                <input type="password" id="initialPassInput" class="modern-input text-center" placeholder="Enter Password">
+                <button type="button" class="toggle-password-btn" onclick="toggleInitialPassword()">
+                    <i class="ph ph-eye" id="eyeIconInitial"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="modal-footer vertical">
+            <button class="btn btn-primary full" onclick="processInitialLogin()">
+                <i class="ph ph-lock-key-open"></i> Unlock Dashboard
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

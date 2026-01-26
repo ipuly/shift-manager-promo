@@ -2296,3 +2296,283 @@ ul.agent-list {
 .eye-btn-inside:hover {
     color: var(--primary);
 }
+
+/* --- SAFETY LOCK STYLES (MODERN) --- */
+
+/* 1. Mode Terkunci (Aman/Default) */
+/* Tampilannya tenang (abu-abu/soft), menandakan tidak ada aktivitas edit */
+.btn-locked {
+    background-color: var(--bg-input);
+    color: var(--text-sub);
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.9;
+}
+.btn-locked:hover {
+    background-color: var(--bg-card);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* 2. Mode Edit (Aktif/Waspada) */
+/* Tampilannya mencolok (Merah Soft) dengan animasi halus (pulse) */
+.btn-unlocked {
+    background-color: #fff1f2; /* Rose 50 */
+    color: #e11d48;            /* Rose 600 */
+    border: 1px solid #fecdd3; /* Rose 200 */
+    box-shadow: 0 0 0 1px #fecdd3;
+    animation: pulseSoft 2s infinite;
+}
+
+/* Dark Mode Adaptation */
+[data-theme="dark"] .btn-locked {
+    background-color: rgba(255,255,255,0.05);
+}
+[data-theme="dark"] .btn-unlocked {
+    background-color: rgba(225, 29, 72, 0.15);
+    color: #fda4af;
+    border-color: rgba(225, 29, 72, 0.3);
+    box-shadow: none;
+}
+
+/* Animasi Berdenyut Halus */
+@keyframes pulseSoft {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.01); }
+    100% { transform: scale(1); }
+}
+
+/* Visual Cue: Ubah kursor jadi 'not-allowed' atau 'default' saat terkunci */
+body.edit-locked .cell-btn {
+    cursor: default !important;
+    /* Opsional: Sedikit transparan agar user sadar ini tidak bisa diklik */
+    opacity: 0.85; 
+}
+/* Kembalikan opacity saat di-hover agar terasa interaktif tapi tetap tidak bisa diklik */
+body.edit-locked .cell-btn:hover {
+    opacity: 1;
+}
+
+/* --- MODERN DAY SELECTOR (FULL WIDTH FIX) --- */
+
+/* Wrapper agar scroll mentok ke pinggir kartu (Edge-to-edge) */
+.day-scroll-wrapper-edge {
+    /* Margin negatif ini menarik konten keluar dari padding kartu (20px) */
+    margin: 0 -20px; 
+    padding: 2px 20px 15px 20px; /* Padding bawah untuk ruang bayangan */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+    
+    /* Sembunyikan Scrollbar */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+.day-scroll-wrapper-edge::-webkit-scrollbar { display: none; }
+
+.day-scroll-container {
+    display: flex;
+    gap: 12px; /* Jarak antar tombol */
+}
+
+/* Tampilan Tombol Hari (Chip) */
+.day-chip {
+    flex: 0 0 auto; /* Mencegah tombol mengecil */
+    padding: 10px 24px; /* Tombol lebih besar & lebar */
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 50px; /* Bentuk Pill (Lonjong) */
+    
+    border: 1px solid var(--border);
+    background: var(--bg-input); 
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Efek Aktif (Selected) */
+.day-chip.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    /* Efek bayangan glow */
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Efek Hover di Desktop */
+.day-chip:hover:not(.active) {
+    background: var(--bg-card);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Penyesuaian Dark Mode */
+[data-theme="dark"] .day-chip {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .day-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+/* --- DYNAMIC HEADER STYLES --- */
+
+/* Animasi halus saat teks berubah */
+#appTitle, #appSubtitle {
+    transition: all 0.3s ease;
+}
+
+/* Style khusus saat menjadi sapaan personal */
+.personalized-title {
+    color: var(--primary); /* Ubah warna jadi biru/warna tema */
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+}
+
+.shift-status-pill {
+    font-weight: 600;
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,0,0,0.05); /* Background tipis */
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+
+/* Dark mode adjustment */
+[data-theme="dark"] .shift-status-pill {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+}
+
+/* Tambahkan atau pastikan kode ini ada */
+#appTitle, #appSubtitle {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Opsional: Efek Fade In saat ganti teks */
+.personalized-title {
+    animation: fadeInText 0.5s ease forwards;
+}
+
+@keyframes fadeInText {
+    from { opacity: 0.5; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- ROW AUTO-FOCUS ANIMATION --- */
+@keyframes flashRow {
+    0% { background-color: rgba(59, 130, 246, 0.0); }
+    25% { background-color: rgba(59, 130, 246, 0.3); } /* Biru transparan */
+    100% { background-color: var(--bg-card); } /* Kembali ke warna asli */
+}
+
+.row-flash {
+    animation: flashRow 2s ease-out;
+}
+
+/* Pastikan transisi baris halus */
+tbody tr {
+    scroll-margin-top: 180px; /* Agar tidak ketutup header saat di-scroll */
+    transition: background-color 0.3s;
+}
+
+/* --- INSTA-STORY CARD GENERATOR --- */
+
+/* Sembunyikan dari layar user (PENTING) */
+.story-card-container {
+    position: fixed;
+    left: -9999px; /* Lempar jauh keluar layar */
+    top: 0;
+    width: 375px;  /* Lebar standar HP */
+    height: 667px; /* Tinggi standar 16:9 */
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); /* Dark Mode Premium */
+    color: white;
+    padding: 30px;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    z-index: -1;
+}
+
+.story-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 15px;
+}
+
+.story-date { font-size: 12px; opacity: 0.6; letter-spacing: 1px; text-transform: uppercase; }
+.story-brand { font-weight: 800; letter-spacing: 2px; font-size: 10px; background: white; color: black; padding: 4px 8px; }
+
+.story-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.story-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid rgba(255,255,255,0.1);
+}
+
+.story-name h2 { font-size: 20px; font-weight: 700; margin: 0; }
+.story-name p { font-size: 12px; color: #94a3b8; margin: 4px 0 0 0; font-weight: 500; }
+
+/* List Jadwal Vertikal */
+.story-schedule-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.story-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    padding: 12px 15px;
+    border-radius: 10px;
+}
+
+.si-day { font-size: 14px; font-weight: 600; color: #e2e8f0; width: 40px; }
+.si-status { 
+    font-size: 12px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    padding: 4px 10px; 
+    border-radius: 6px; 
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Warna Status Spesifik untuk Gambar */
+.st-p { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.st-s { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.st-m { background: rgba(142, 68, 173, 0.2); color: #9b59b6; }
+.st-o { background: rgba(255, 255, 255, 0.1); color: #95a5a6; }
+.st-vl { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+
+.story-footer {
+    text-align: center;
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 20px;
+    letter-spacing: 1px;
+}

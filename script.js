@@ -29,6 +29,7 @@ let selectedFilterLetter = 'ALL';
 
 let selectedTagFilter = 'ALL'; 
 
+let headerGreetingMode = true;
 
 // Kode Shift & Warna (Sesuai CSS Variables)
 const shiftTypes = {
@@ -109,8 +110,16 @@ function updateUIForAdmin() {
             }
         }
     });
-}
+    isEditMode = false; 
+    updateEditModeUI();
 
+    // 2. Kontrol tombol Lock (Hanya muncul jika user adalah Admin)
+    const btnLock = document.getElementById('btnEditToggle');
+    if(btnLock) {
+        // Jika Admin: Tampilkan (flex), Jika bukan: Sembunyikan (none)
+        btnLock.style.display = isAdmin ? 'flex' : 'none';
+    }
+}
 
 // --- LOGIKA HAMBURGER MENU ---
 function toggleMenu() {
@@ -162,6 +171,45 @@ function doLogin() {
         alert("Wrong Password!");
     }
 }
+
+// --- SAFETY LOCK LOGIC ---
+let isEditMode = false; // Default: Locked
+
+function toggleEditMode() {
+    // Cek izin admin dulu
+    if (!checkPermission()) return;
+
+    isEditMode = !isEditMode;
+    updateEditModeUI();
+}
+
+function updateEditModeUI() {
+    const btn = document.getElementById('btnEditToggle');
+    if (!btn) return;
+
+    if (isEditMode) {
+        // --- STATE: UNLOCKED (Bisa Edit) ---
+        btn.className = "btn btn-icon-text btn-unlocked";
+        // Icon pensil menandakan sedang mode tulis
+        btn.innerHTML = `<i class="ph ph-pencil-simple-line"></i> <span>Editing Enabled</span>`;
+        
+        document.body.classList.remove('edit-locked');
+        
+        // Notif Modern: Tipe "error" (Merah) dipakai untuk 'Warning'
+        showToast("Edit Mode Active. Tap carefully.", "error"); 
+    } else {
+        // --- STATE: LOCKED (Hanya Baca) ---
+        btn.className = "btn btn-icon-text btn-locked";
+        // Icon Shield menandakan aman
+        btn.innerHTML = `<i class="ph ph-shield-check"></i> <span>Read-Only View</span>`;
+        
+        document.body.classList.add('edit-locked');
+        
+        // Notif Modern: Tipe "success" (Hijau)
+        showToast("Schedule Locked. Safe to scroll.", "success");
+    }
+}
+
 
 // =========================================
 // FITUR LIHAT PASSWORD (MATA)
@@ -236,6 +284,42 @@ function closeAccessDeniedModal() {
 function openLoginFromWarning() {
     closeAccessDeniedModal(); // Tutup peringatan
     showLoginModal();         // Buka form login
+}
+
+// --- FITUR WOW: HOLIDAY CELEBRATION ---
+function triggerCelebration() {
+    // Cek apakah sudah pernah merayakan di sesi ini? (Agar tidak berulang-ulang saat refresh header)
+    if (sessionStorage.getItem('has_celebrated')) return;
+
+    // Setup Konfeti
+    var duration = 3 * 1000; // Durasi 3 detik
+    var animationEnd = Date.now() + duration;
+    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // Jalankan interval letupan
+    var interval = setInterval(function() {
+      var timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      var particleCount = 50 * (timeLeft / duration);
+      
+      // Tembak dari Kiri & Kanan
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+
+    // Tandai bahwa perayaan sudah dilakukan
+    sessionStorage.setItem('has_celebrated', 'true');
+    
+    // Opsional: Getar HP
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
 }
 
 
@@ -313,6 +397,54 @@ async function initData() {
             }, 300);
         }
     }, 1500);
+    initData:
+    setTodayAsDefault(); 
+    updateHeaderGreeting(); 
+    
+    // Jalankan Timer
+    setInterval(() => {
+        // Cek apakah user sedang login?
+        const myId = localStorage.getItem('my_profile_id');
+        if (myId !== null && masterData[myId]) {
+            // Jika login, balik status mode (True <-> False)
+            headerGreetingMode = !headerGreetingMode;
+            updateHeaderGreeting();
+        }
+    }, 5000); // 5000ms = 5 Detik
+    forceOpenScheduleTab(); 
+}
+
+// --- FITUR AUTO SELECT HARI INI ---
+// --- LOGIKA DAY CHIPS ---
+function selectDay(dayIdx, btnElement) {
+    // 1. Update nilai hidden input (agar fungsi lain tetap jalan)
+    document.getElementById("daySelector").value = dayIdx;
+
+    // 2. Update Visual Tombol (Pindahkan kelas .active)
+    document.querySelectorAll('.day-chip').forEach(btn => btn.classList.remove('active'));
+    if(btnElement) {
+        btnElement.classList.add('active');
+        
+        // Auto scroll agar tombol yang dipilih terlihat di tengah
+        btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    // 3. Render Data
+    renderGrouping();
+}
+
+// UPDATE FUNGSI AUTO-SELECT (Agar kompatibel dengan Chips)
+function setTodayAsDefault() {
+    const today = new Date();
+    const jsDay = today.getDay(); 
+    let appDayIdx = jsDay - 1;
+    if (appDayIdx === -1) appDayIdx = 6; 
+
+    // Cari tombol chip yang sesuai hari ini dan klik secara programatis
+    const chips = document.querySelectorAll('.day-chip');
+    if(chips[appDayIdx]) {
+        selectDay(appDayIdx, chips[appDayIdx]);
+    }
 }
 
 async function saveAll() {
@@ -483,6 +615,8 @@ function refreshAllViews() {
     populateSwapDropdowns(); 
     renderAgentList();
     
+    updateHeaderGreeting();
+    
     /* renderDailyNarrative(); */
 }
 
@@ -592,12 +726,26 @@ function filterTables() {
 
 function cycleShift(idx, dayIdx) {
     if(!checkPermission()) return; 
+    
+    if (!isEditMode) {
+        // Efek getar HP (Haptic Feedback) menandakan error
+        if (navigator.vibrate) navigator.vibrate(50);
+        
+        // Notif Bahasa Inggris Modern
+        showToast("🔒 View Only. Tap button to edit.", "error");
+        return; 
+    }
+    
     let targetArray = getActiveShiftData();
     let val = targetArray[idx][dayIdx];
     val++; 
     if (val > 6) val = 0; 
     targetArray[idx][dayIdx] = val;
     setActiveShiftData(targetArray);
+    
+    // Optimasi render
+    const cell = document.querySelector(`#row-${idx} button[onmouseup*="${dayIdx}"]`) 
+              || document.querySelector(`#row-${idx} button[onclick*="${dayIdx}"]`); // Fallback
     
     // Optimasi: Hanya render ulang tabel, tidak seluruh view
     refreshAllViews();
@@ -1431,27 +1579,118 @@ function copyCurrentJson() {
     showToast("JSON Copied to Clipboard!", "success");
 }
 
+// --- SMART DOWNLOAD (Admin vs User) ---
 function downloadScheduleAsImage() {
-    const elementToCapture = document.getElementById("mainContainer");
-    if(!elementToCapture || elementToCapture.innerText.trim() === "") {
-        return alert("Table is empty/not visible!");
+    
+    // --- SKENARIO 1: ADMIN (DOWNLOAD FULL TABLE) ---
+    if (isAdmin) {
+        const elementToCapture = document.getElementById("mainContainer");
+        
+        // Validasi: Apakah tabel ada isinya?
+        if(!elementToCapture || elementToCapture.innerText.trim() === "") {
+            return showToast("Table is empty!", "error");
+        }
+
+        showToast("Capturing Full Schedule...", "process");
+
+        // Gunakan background sesuai tema saat ini
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const bgColor = isDark ? '#1e293b' : '#ffffff';
+
+        html2canvas(elementToCapture, {
+            scale: 2, // Resolusi Tinggi
+            backgroundColor: bgColor,
+            useCORS: true
+        }).then(canvas => {
+            const link = document.createElement('a');
+            // Nama file: Full_Schedule_Jam_Tanggal.png
+            link.download = 'Full_Schedule_' + new Date().getTime() + '.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            showToast("Full Schedule Downloaded! 📂", "success");
+        }).catch(err => {
+            console.error(err);
+            showToast("Failed to capture table.", "error");
+        });
+
+        return; // Hentikan fungsi di sini agar tidak lanjut ke logika User
     }
 
-    showToast("Generating Image...", "process");
 
+    // --- SKENARIO 2: USER BIASA (DOWNLOAD AESTHETIC CARD) ---
+    
+    // 1. Cek Apakah User Sudah Pilih Profil?
+    const myId = localStorage.getItem('my_profile_id');
+    if (myId === null) {
+        return showToast("Please select your profile first!", "error");
+    }
+
+    showToast("Generating Aesthetic Card...", "process");
+
+    // 2. Ambil Data User
+    const agent = masterData[myId];
+    const activeShifts = getActiveShiftData();
+    const myShifts = activeShifts[myId];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    // 3. Isi Template Tersembunyi
+    document.getElementById('storyName').innerText = agent.name;
+    document.getElementById('storyRole').innerText = `${agent.spv} Team • ${agent.role || 'Agent'}`;
+    
+    // Avatar
+    const initials = getInitials(agent.name);
+    const color = stringToColor(agent.name);
+    const av = document.getElementById('storyAvatar');
+    av.innerText = initials;
+    av.style.backgroundColor = color;
+
+    // Tanggal
+    const date = new Date();
+    document.getElementById('storyDate').innerText = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+    // 4. Generate List Jadwal Vertikal
+    const listContainer = document.getElementById('storyList');
+    listContainer.innerHTML = ""; 
+
+    myShifts.forEach((code, idx) => {
+        let label = "OFF";
+        let styleClass = "st-o";
+
+        if (code === 1) { label = "MORNING"; styleClass = "st-p"; }
+        else if (code === 2) { label = "AFTERNOON"; styleClass = "st-s"; }
+        else if (code === 3) { label = "NIGHT"; styleClass = "st-m"; }
+        else if (code === 4) { label = "LEAVE"; styleClass = "st-vl"; }
+        else if (code === 5) { label = "LOA"; styleClass = "st-o"; }
+        else if (code === 6) { label = "BIRTHDAY"; styleClass = "st-vl"; }
+
+        const item = document.createElement('div');
+        item.className = "story-item";
+        item.innerHTML = `
+            <div class="si-day">${days[idx]}</div>
+            <div style="flex-grow:1; border-bottom:1px dashed rgba(255,255,255,0.1); margin:0 10px;"></div>
+            <div class="si-status ${styleClass}">${label}</div>
+        `;
+        listContainer.appendChild(item);
+    });
+
+    // 5. Screenshot Template Card
+    const elementToCapture = document.getElementById("storyTemplate");
+    
     html2canvas(elementToCapture, {
         scale: 2, 
-        backgroundColor: document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff',
+        backgroundColor: "#0f172a", 
         useCORS: true
     }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'Schedule-' + new Date().getTime() + '.png';
+        link.download = `My_Schedule_${agent.name.split(' ')[0]}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
-        showToast("Image Downloaded!", "success");
+        
+        showToast("Story Card Downloaded! ✨", "success");
+        if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
     }).catch(err => {
         console.error(err);
-        alert("Failed to generate image.");
+        showToast("Failed to generate card", "error");
     });
 }
 
@@ -1496,6 +1735,8 @@ function startPress(idx, day) {
     // Cek apakah user adalah Admin?
     // Jika BUKAN admin, langsung berhenti. Menu tidak akan muncul.
     if (!isAdmin) return; 
+    
+    if (!isEditMode) return;
 
     isLongPress = false; // Reset status
     
@@ -1847,7 +2088,14 @@ function askConfirmation(type, data = null) {
     // ATUR PESAN SESUAI TIPE AKSI
     let message = "Are you sure?";
 
-    if (type === 'image') message = "Download Schedule as Image?";
+    if (type === 'image') {
+        // Cek Admin atau Bukan untuk pesan yang pas
+        if (isAdmin) {
+            message = "Download Full Schedule Table?";
+        } else {
+            message = "Generate Aesthetic Story Card?";
+        }
+    }   
     else if (type === 'report') message = "Copy Report to WhatsApp?";
     else if (type === 'excel') message = "Export Data to Excel?";
     
@@ -2327,6 +2575,8 @@ function finishLoginProcess() {
         const sel = document.getElementById('myProfileSelector');
         if(sel) sel.disabled = false;
     }
+    updateHeaderGreeting();
+    forceOpenScheduleTab(); 
 }
 
 function openLogHistoryModal() {
@@ -2389,14 +2639,146 @@ function openLogHistoryModal() {
     modal.style.display = 'flex';
 }
 
-// =========================================
-// FITUR AKUN SAYA (PROFILE MANAGEMENT)
-// =========================================
+// --- DYNAMIC HEADER LOGIC (ALL FEATURES COMBINED) ---
+function updateHeaderGreeting() {
+    const titleEl = document.getElementById('appTitle');
+    const subEl = document.getElementById('appSubtitle');
+    const dividerEl = document.getElementById('headerDivider');
+    const myId = localStorage.getItem('my_profile_id');
 
-// 1. Fungsi Helper Toggle Password (Wajib ada)
+    // 1. JIKA BELUM LOGIN (Tampilkan Default Selamanya)
+    if (myId === null || !masterData[myId]) {
+        titleEl.innerText = "Shift Manager Promotion"; 
+        titleEl.classList.remove('personalized-title');
+        subEl.innerText = "Daily Dashboard";
+        subEl.className = ""; 
+        if(dividerEl) dividerEl.style.display = "inline";
+        return;
+    }
+
+    // 2. LOGIKA ROTASI (GREETING vs APP TITLE)
+    if (headerGreetingMode) {
+        // --- MODE 1: SAPAAN PERSONAL (GREETING) ---
+        
+        const agent = masterData[myId];
+        
+        // Ambil 2 Kata Pertama dari Nama
+        const displayName = agent.name.split(' ').slice(0, 2).join(' ');
+
+        // Logika Waktu
+        const h = new Date().getHours();
+        let greet = "Hi";
+        if (h >= 5 && h < 11) greet = "Good Morning";
+        else if (h >= 11 && h < 15) greet = "Good Afternoon";
+        else if (h >= 15 && h < 19) greet = "Good Evening";
+        else greet = "Good Night";
+
+        // Render Judul (Nama User)
+        titleEl.innerText = `${greet}, ${displayName}`;
+        titleEl.classList.add('personalized-title');
+
+        // Logika Status Shift (Dot System)
+        const today = new Date();
+        let todayIdx = today.getDay() - 1;
+        if (todayIdx === -1) todayIdx = 6;
+        const activeShifts = getActiveShiftData();
+        const code = activeShifts[myId][todayIdx];
+        
+        let statusLabel = "";
+        let dotClass = "";
+        
+        if (code === 1) { statusLabel = "Morning Shift"; dotClass = "bg-p"; }
+        else if (code === 2) { statusLabel = "Afternoon Shift"; dotClass = "bg-s"; }
+        else if (code === 3) { statusLabel = "Night Shift"; dotClass = "bg-m"; }
+        else if (code === 0) { statusLabel = "Off Duty"; dotClass = "bg-o"; }
+        else if (code === 4) { statusLabel = "Vacation Leave"; dotClass = "bg-vl"; }
+        else if (code === 5) { statusLabel = "On Leave (LOA)"; dotClass = "bg-loa"; }
+        else if (code === 6) { statusLabel = "Happy Birthday"; dotClass = "bg-vl"; } // Special Label
+        else { statusLabel = "Check Schedule"; dotClass = "bg-gray"; }
+
+        // ============================================
+        // INI BAGIAN "STEP B" (LOGIKA KONFETI)
+        // ============================================
+        // Cek Kode Shift: 0 (OFF), 4 (VL), 5 (LOA), 6 (BL)
+        if (code === 0 || code === 4 || code === 5 || code === 6) {
+             // Beri jeda sedikit agar halaman loading sempurna dulu baru meledak
+             setTimeout(() => {
+                 // Pastikan fungsi triggerCelebration sudah dibuat di Langkah A
+                 if(typeof triggerCelebration === "function") {
+                    triggerCelebration();
+                 }
+             }, 800);
+        }
+        // ============================================
+
+        // Render Subtitle dengan Dot
+        subEl.innerHTML = `<span class="status-dot ${dotClass}"></span> ${statusLabel}`;
+        subEl.className = "shift-status-minimal"; 
+        if(dividerEl) dividerEl.style.display = "none";
+
+    } else {
+        // --- MODE 2: JUDUL APLIKASI (DEFAULT) ---
+        
+        titleEl.innerText = "Shift Manager Promotion"; 
+        titleEl.classList.remove('personalized-title');
+        
+        subEl.innerText = "Daily Dashboard";
+        subEl.className = ""; // Reset style pill/dot
+        
+        if(dividerEl) dividerEl.style.display = "inline";
+    }
+}
 
 
-// 2. Fungsi Utama Modal Akun (VERSI UPDATE)
+// --- FITUR AUTO-SCROLL KE NAMA SAYA ---
+function scrollToMyRow() {
+    const myId = localStorage.getItem('my_profile_id');
+    
+    // Jika belum pilih profil, stop.
+    if (myId === null) return;
 
+    // Cari elemen baris (TR) milik user
+    const targetRow = document.getElementById(`row-${myId}`);
+    
+    if (targetRow) {
+        // 1. Scroll perlahan ke elemen tersebut
+        setTimeout(() => {
+            targetRow.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' // Taruh di tengah layar
+            });
+            
+            // 2. Tambahkan efek kedip (Flash)
+            targetRow.classList.add('row-flash');
+            
+            // 3. Hapus kelas animasi setelah selesai biar bersih
+            setTimeout(() => {
+                targetRow.classList.remove('row-flash');
+            }, 2000);
+            
+        }, 500); // Delay sedikit (0.5 detik) agar loading selesai dulu
+    }
+}
 
+// --- AUTO REDIRECT KE JADWAL ---
+function forceOpenScheduleTab() {
+    const myId = localStorage.getItem('my_profile_id');
+    
+    // Hanya pindah jika user sudah login (punya profil)
+    if (myId === null) return;
 
+    // 1. Cari tombol navigasi "Shift"
+    // (Kita cari tombol yang punya fungsi switchTab ke 'schedule')
+    const shiftBtn = document.querySelector("button[onclick*='schedule']");
+    
+    if(shiftBtn) {
+        // 2. Klik tombol tersebut secara otomatis
+        shiftBtn.click(); 
+        
+        // 3. Setelah pindah tab, baru jalankan Scroll
+        // Kita beri jeda sedikit agar transisi tab selesai dulu
+        setTimeout(() => {
+            scrollToMyRow();
+        }, 300); 
+    }
+}

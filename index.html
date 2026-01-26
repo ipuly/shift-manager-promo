@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shift Manager Pro</title>
     
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,10 +16,14 @@
     
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    
+    
     
     <!-- <div id="loadingLayer" class="loading-overlay">
         <div class="spinner-box">
@@ -34,16 +41,19 @@
 
     <header class="app-header">
         <div class="header-content">
-            <div class="header-title">
-                <h2>Shift Manager Promotion</h2>
-                <div class="header-meta">
-                    <span id="headerSub">Daily Dashboard</span>
-                    <span class="divider">•</span>
-                    <span id="lastUpdateBadge" class="update-badge">
-                        <i class="ph ph-clock"></i> Waiting data...
-                    </span>
-                </div>
-            </div>
+<div class="header-title">
+    <h2 id="appTitle">Shift Manager Pro</h2>
+    
+    <div class="header-meta">
+        <span id="appSubtitle">Daily Dashboard</span>
+        
+        <span class="divider" id="headerDivider">•</span>
+        <span id="lastUpdateBadge" class="update-badge">
+            <i class="ph ph-clock"></i> ...
+        </span>
+    </div>
+</div>
+
             
             <button class="icon-btn hamburger-btn" onclick="toggleMenu()">
                 <i class="ph ph-list"></i>
@@ -152,38 +162,41 @@
 </div>
 
             <div class="card controls-card" id="dashboardCard">
-                <div class="control-row">
-                    <div class="control-group">
-                        <label>View Mode</label>
-                        <div class="select-wrapper">
-                            <select id="weekSelector" class="modern-select" onchange="switchWeekMode()">
-                                <option value="current">Current Week</option>
-                                <option value="next">Next Week (Initial)</option>
-                            </select>
-                            <i class="ph ph-caret-down select-arrow"></i>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label>Day Filter</label>
-                        <div class="select-wrapper">
-                            <select id="daySelector" class="modern-select" onchange="renderGrouping()">
-                                <option value="0">Monday</option>
-                                <option value="1">Tuesday</option>
-                                <option value="2">Wednesday</option>
-                                <option value="3">Thursday</option>
-                                <option value="4">Friday</option>
-                                <option value="5">Saturday</option>
-                                <option value="6">Sunday</option>
-                            </select>
-                            <i class="ph ph-caret-down select-arrow"></i>
-                        </div>
-                    </div>
-                </div>
+    
+    <div class="control-group" style="margin-bottom: 20px;">
+        <label style="margin-bottom:8px; display:block; font-weight:600; color:var(--text-sub); text-transform:uppercase; font-size:11px;">View Mode</label>
+        <div class="select-wrapper">
+            <select id="weekSelector" class="modern-select" onchange="switchWeekMode()">
+                <option value="current">Current Week</option>
+                <option value="next">Next Week (Initial)</option>
+            </select>
+            <i class="ph ph-caret-down select-arrow"></i>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label style="margin-bottom:12px; display:block; font-weight:600; color:var(--text-sub); text-transform:uppercase; font-size:11px;">Select Day</label>
+        
+        <div class="day-scroll-wrapper-edge"> 
+            <div class="day-scroll-container">
+                <input type="hidden" id="daySelector" value="0">
                 
-                <button id="btnRollOver" class="btn btn-warning mt-2" onclick="promoteNextToCurrent()" style="display:none;">
-                    <i class="ph ph-arrow-fat-lines-right"></i> Roll Over to Current Week
-                </button>
+                <button class="day-chip active" onclick="selectDay(0, this)">Monday</button>
+                <button class="day-chip" onclick="selectDay(1, this)">Tuesday</button>
+                <button class="day-chip" onclick="selectDay(2, this)">Wednesday</button>
+                <button class="day-chip" onclick="selectDay(3, this)">Thursday</button>
+                <button class="day-chip" onclick="selectDay(4, this)">Friday</button>
+                <button class="day-chip" onclick="selectDay(5, this)">Saturday</button>
+                <button class="day-chip" onclick="selectDay(6, this)">Sunday</button>
             </div>
+        </div>
+    </div>
+
+    <button id="btnRollOver" class="btn btn-warning mt-2" onclick="promoteNextToCurrent()" style="display:none; margin-top:20px;">
+        <i class="ph ph-arrow-fat-lines-right"></i> Roll Over to Current Week
+    </button>
+</div>
+
             
             <button class="btn btn-gradient mt-3 mb-3 full-width" onclick="openSummaryModal()">
     <i class="ph ph-sparkle"></i> Generate AI Daily Insight
@@ -281,10 +294,15 @@
     <div class="card controls-card sticky-controls">
         
         <div class="toolbar-top">
-            <div class="search-bar">
-                <i class="ph ph-magnifying-glass search-icon"></i>
-                <input type="text" id="searchInput" class="search-input" onkeyup="searchNames()" placeholder="Find employee...">
-            </div>
+    <button id="btnEditToggle" class="btn btn-icon-text btn-locked" onclick="toggleEditMode()" style="margin-bottom: 12px; width: 100%; justify-content: center; font-weight:600;">
+        <i class="ph ph-shield-check"></i> <span>Read-Only View</span>
+    </button>
+
+    <div class="search-bar">
+        <i class="ph ph-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" onkeyup="searchNames()" placeholder="Find employee...">
+    </div>
+    
             
             <div class="select-wrapper filter-wrapper">
                 <select id="teamFilter" class="modern-select" onchange="filterTables()">
@@ -741,6 +759,28 @@ window.addEventListener('load', function() {
                 <i class="ph ph-lock-key-open"></i> Unlock Dashboard
             </button>
         </div>
+    </div>
+</div>
+
+<div id="storyTemplate" class="story-card-container">
+    <div class="story-header">
+        <div class="story-date" id="storyDate">January 2026</div>
+        <div class="story-brand">MY WEEKLY SHIFT</div>
+    </div>
+    
+    <div class="story-profile">
+        <div class="story-avatar" id="storyAvatar">A</div>
+        <div class="story-name">
+            <h2 id="storyName">User Name</h2>
+            <p id="storyRole">Team Hijryan</p>
+        </div>
+    </div>
+
+    <div class="story-schedule-list" id="storyList">
+        </div>
+
+    <div class="story-footer">
+        Generated by Shift Manager Pro
     </div>
 </div>
 

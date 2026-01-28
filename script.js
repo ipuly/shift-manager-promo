@@ -1252,8 +1252,8 @@ function renderAgentList() {
         let actionButtons = "";
         if (isAdmin) {
             actionButtons = `<div style="display:flex; gap:8px;">
-                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${index})"><i class="ph ph-pencil-simple"></i></button>
-                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${index})"><i class="ph ph-trash"></i></button>
+                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${index})" aria-label="Edit agent"><i class="ph ph-pencil-simple" aria-hidden="true"></i></button>
+                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${index})" aria-label="Delete agent"><i class="ph ph-trash" aria-hidden="true"></i></button>
             </div>`;
         }
 

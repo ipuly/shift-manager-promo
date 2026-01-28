@@ -1,0 +1,3 @@
+## 2025-05-24 - [Widespread Missing ARIA Labels on Icon-Only Buttons]
+**Learning:** This vanilla JavaScript SPA uses Phosphor icons extensively for interactive elements (hamburger menu, FAB, zoom controls, password toggles, modal closures, and agent actions). None of these had ARIA labels, making them inaccessible to screen readers. In such designs, the `aria-label` attribute on the button and `aria-hidden="true"` on the icon are essential.
+**Action:** Always check both static HTML and dynamic rendering logic (e.g., in `script.js`) for icon-only buttons and apply standard accessibility attributes.

@@ -55,8 +55,8 @@
 </div>
 
             
-            <button class="icon-btn hamburger-btn" onclick="toggleMenu()">
-                <i class="ph ph-list"></i>
+            <button class="icon-btn hamburger-btn" onclick="toggleMenu()" aria-label="Open navigation menu">
+                <i class="ph ph-list" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -208,8 +208,8 @@
             <h3 style="display:flex; align-items:center; gap:8px;">
                 <i class="ph ph-robot text-accent"></i> AI Daily Insight
             </h3>
-            <button class="icon-btn-sm" onclick="closeSummaryModal()">
-                <i class="ph ph-x"></i>
+            <button class="icon-btn-sm" onclick="closeSummaryModal()" aria-label="Close insight">
+                <i class="ph ph-x" aria-hidden="true"></i>
             </button>
         </div>
         <div class="modal-body" style="min-height:200px; display:flex; align-items:center; justify-content:center;">
@@ -236,12 +236,12 @@
     </h4>
     
     <div class="zoom-controls">
-        <button class="zoom-btn" onclick="changeSummaryZoom('out')" title="Zoom Out">
-            <i class="ph ph-minus"></i>
+        <button class="zoom-btn" onclick="changeSummaryZoom('out')" title="Zoom Out" aria-label="Zoom out">
+            <i class="ph ph-minus" aria-hidden="true"></i>
         </button>
         <span id="zoomLabel" style="font-size:10px; color:#94a3b8; font-weight:600; min-width:30px; text-align:center;">100%</span>
-        <button class="zoom-btn" onclick="changeSummaryZoom('in')" title="Zoom In">
-            <i class="ph ph-plus"></i>
+        <button class="zoom-btn" onclick="changeSummaryZoom('in')" title="Zoom In" aria-label="Zoom in">
+            <i class="ph ph-plus" aria-hidden="true"></i>
         </button>
     </div>
 </div>
@@ -434,8 +434,8 @@
                 <ul class="agent-list" id="agentListContainer"></ul>
             </div>
             
-            <button id="btnAddAgent" class="fab-btn" onclick="openModal('add')" style="display:none;">
-                <i class="ph ph-plus"></i>
+            <button id="btnAddAgent" class="fab-btn" onclick="openModal('add')" style="display:none;" aria-label="Add new agent">
+                <i class="ph ph-plus" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -487,8 +487,8 @@
         <label>Login Password</label>
         <div class="password-input-group">
             <input type="password" id="modalAgentPassword" class="modern-input" placeholder="Enter password">
-            <button type="button" class="eye-btn-inside" onclick="togglePass('modalAgentPassword', 'eyeAgent')">
-                <i class="ph ph-eye" id="eyeAgent"></i>
+            <button type="button" class="eye-btn-inside" onclick="togglePass('modalAgentPassword', 'eyeAgent')" aria-label="Toggle password visibility">
+                <i class="ph ph-eye" id="eyeAgent" aria-hidden="true"></i>
             </button>
         </div>
     </div>
@@ -537,8 +537,8 @@
             <div class="password-input-wrapper">
     <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••">
     
-    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()">
-        <i class="ph ph-eye" id="eyeIcon"></i>
+    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility">
+        <i class="ph ph-eye" id="eyeIcon" aria-hidden="true"></i>
     </button>
 </div>
 
@@ -621,8 +621,8 @@
     </div>
 </div>
 
-    <div id="saveStatus" class="toast-notification">
-        <i class="ph ph-check-circle"></i>
+    <div id="saveStatus" class="toast-notification" role="status" aria-live="polite">
+        <i class="ph ph-check-circle" aria-hidden="true"></i>
         <span>Data Saved</span>
     </div>
     
@@ -661,8 +661,8 @@
                 <label>Current Password</label>
                 <div class="password-input-group">
                     <input type="password" id="accCurrentPass" class="modern-input" readonly value="Loading...">
-                    <button type="button" class="eye-btn-inside" onclick="togglePass('accCurrentPass', 'eye1')">
-                        <i class="ph ph-eye" id="eye1"></i>
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accCurrentPass', 'eye1')" aria-label="Toggle password visibility">
+                        <i class="ph ph-eye" id="eye1" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -671,8 +671,8 @@
                 <label>New Password</label>
                 <div class="password-input-group">
                     <input type="password" id="accNewPass" class="modern-input" placeholder="Create new password">
-                    <button type="button" class="eye-btn-inside" onclick="togglePass('accNewPass', 'eye2')">
-                        <i class="ph ph-eye" id="eye2"></i>
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accNewPass', 'eye2')" aria-label="Toggle password visibility">
+                        <i class="ph ph-eye" id="eye2" aria-hidden="true"></i>
                     </button>
                 </div>
                 <p style="font-size:10px; color:var(--text-sub); margin-top:5px;">Minimum 4 characters</p>
@@ -748,8 +748,8 @@ window.addEventListener('load', function() {
 
             <div class="password-input-wrapper">
                 <input type="password" id="initialPassInput" class="modern-input text-center" placeholder="Enter Password">
-                <button type="button" class="toggle-password-btn" onclick="toggleInitialPassword()">
-                    <i class="ph ph-eye" id="eyeIconInitial"></i>
+                <button type="button" class="toggle-password-btn" onclick="toggleInitialPassword()" aria-label="Toggle password visibility">
+                    <i class="ph ph-eye" id="eyeIconInitial" aria-hidden="true"></i>
                 </button>
             </div>
         </div>

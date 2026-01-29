@@ -1252,8 +1252,8 @@ function renderAgentList() {
         let actionButtons = "";
         if (isAdmin) {
             actionButtons = `<div style="display:flex; gap:8px;">
-                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${index})"><i class="ph ph-pencil-simple"></i></button>
-                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${index})"><i class="ph ph-trash"></i></button>
+                <button class="icon-btn-sm" style="color:#f59e0b" onclick="openModal('edit',${index})" aria-label="Edit agent"><i class="ph ph-pencil-simple" aria-hidden="true"></i></button>
+                <button class="icon-btn-sm" style="color:#ef4444" onclick="deleteAgent(${index})" aria-label="Delete agent"><i class="ph ph-trash" aria-hidden="true"></i></button>
             </div>`;
         }
 
@@ -2034,15 +2034,21 @@ function renderInteractiveLegend() {
 
     const resetBtn = document.createElement("div");
     resetBtn.className = "legend-item";
-    resetBtn.innerHTML = "<i class='ph ph-arrows-clockwise'></i> Show All";
+    resetBtn.setAttribute("role", "button");
+    resetBtn.setAttribute("tabindex", "0");
+    resetBtn.innerHTML = "<i class='ph ph-arrows-clockwise' aria-hidden='true'></i> Show All";
     resetBtn.onclick = () => clearHighlight();
+    resetBtn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') clearHighlight(); };
     container.appendChild(resetBtn);
 
     legends.forEach(item => {
         const div = document.createElement("div");
         div.className = "legend-item";
-        div.innerHTML = `<span class="legend-dot" style="background:${item.color}"></span> ${item.label}`;
+        div.setAttribute("role", "button");
+        div.setAttribute("tabindex", "0");
+        div.innerHTML = `<span class="legend-dot" style="background:${item.color}" aria-hidden="true"></span> ${item.label}`;
         div.onclick = () => highlightShiftType(item.code);
+        div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') highlightShiftType(item.code); };
         container.appendChild(div);
     });
 }

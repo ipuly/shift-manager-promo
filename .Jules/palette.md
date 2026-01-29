@@ -1,0 +1,3 @@
+## 2026-01-25 - [Accessibility Enhancements]
+**Learning:** The application used several icon-only buttons and interactive divs without proper ARIA attributes or keyboard support, which significantly hindered accessibility for screen reader and keyboard-only users.
+**Action:** Always add `aria-label` to icon-only buttons, use `role="status"` and `aria-live="polite"` for toast notifications, and ensure custom interactive elements have `role="button"`, `tabindex="0"`, and appropriate keyboard event listeners. Ensure all form labels are correctly associated with their inputs using the `for` attribute.

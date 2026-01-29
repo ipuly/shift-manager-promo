@@ -55,8 +55,8 @@
 </div>
 
             
-            <button class="icon-btn hamburger-btn" onclick="toggleMenu()">
-                <i class="ph ph-list"></i>
+            <button class="icon-btn hamburger-btn" onclick="toggleMenu()" aria-label="Toggle menu">
+                <i class="ph ph-list" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -208,8 +208,8 @@
             <h3 style="display:flex; align-items:center; gap:8px;">
                 <i class="ph ph-robot text-accent"></i> AI Daily Insight
             </h3>
-            <button class="icon-btn-sm" onclick="closeSummaryModal()">
-                <i class="ph ph-x"></i>
+            <button class="icon-btn-sm" onclick="closeSummaryModal()" aria-label="Close">
+                <i class="ph ph-x" aria-hidden="true"></i>
             </button>
         </div>
         <div class="modal-body" style="min-height:200px; display:flex; align-items:center; justify-content:center;">
@@ -236,12 +236,12 @@
     </h4>
     
     <div class="zoom-controls">
-        <button class="zoom-btn" onclick="changeSummaryZoom('out')" title="Zoom Out">
-            <i class="ph ph-minus"></i>
+        <button class="zoom-btn" onclick="changeSummaryZoom('out')" title="Zoom Out" aria-label="Zoom out">
+            <i class="ph ph-minus" aria-hidden="true"></i>
         </button>
         <span id="zoomLabel" style="font-size:10px; color:#94a3b8; font-weight:600; min-width:30px; text-align:center;">100%</span>
-        <button class="zoom-btn" onclick="changeSummaryZoom('in')" title="Zoom In">
-            <i class="ph ph-plus"></i>
+        <button class="zoom-btn" onclick="changeSummaryZoom('in')" title="Zoom In" aria-label="Zoom in">
+            <i class="ph ph-plus" aria-hidden="true"></i>
         </button>
     </div>
 </div>
@@ -359,23 +359,23 @@
         
         <div class="swap-agent-container">
             <div class="swap-side">
-                <label class="input-label">Agent A</label>
+                <label class="input-label" for="swapAgent1">Agent A</label>
                 <div class="select-wrapper">
                     <select id="swapAgent1" class="modern-select" onchange="updateSwapPreview()"></select>
-                    <i class="ph ph-caret-down select-arrow"></i>
+                    <i class="ph ph-caret-down select-arrow" aria-hidden="true"></i>
                 </div>
                 <div id="preview1" class="mini-schedule-row"></div>
             </div>
             
             <div class="swap-connector-icon">
-                <i class="ph ph-arrows-left-right"></i>
+                <i class="ph ph-arrows-left-right" aria-hidden="true"></i>
             </div>
             
             <div class="swap-side">
-                <label class="input-label">Agent B</label>
+                <label class="input-label" for="swapAgent2">Agent B</label>
                 <div class="select-wrapper">
                     <select id="swapAgent2" class="modern-select" onchange="updateSwapPreview()"></select>
-                    <i class="ph ph-caret-down select-arrow"></i>
+                    <i class="ph ph-caret-down select-arrow" aria-hidden="true"></i>
                 </div>
                 <div id="preview2" class="mini-schedule-row"></div>
             </div>
@@ -434,8 +434,8 @@
                 <ul class="agent-list" id="agentListContainer"></ul>
             </div>
             
-            <button id="btnAddAgent" class="fab-btn" onclick="openModal('add')" style="display:none;">
-                <i class="ph ph-plus"></i>
+            <button id="btnAddAgent" class="fab-btn" onclick="openModal('add')" style="display:none;" aria-label="Add agent">
+                <i class="ph ph-plus" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -479,34 +479,34 @@
     <input type="hidden" id="editIndex">
     
     <div class="form-group">
-        <label>Full Name</label>
+        <label for="modalName">Full Name</label>
         <input type="text" id="modalName" class="modern-input" placeholder="Enter name">
     </div>
 
     <div class="form-group">
-        <label>Login Password</label>
+        <label for="modalAgentPassword">Login Password</label>
         <div class="password-input-group">
             <input type="password" id="modalAgentPassword" class="modern-input" placeholder="Enter password">
-            <button type="button" class="eye-btn-inside" onclick="togglePass('modalAgentPassword', 'eyeAgent')">
-                <i class="ph ph-eye" id="eyeAgent"></i>
+            <button type="button" class="eye-btn-inside" onclick="togglePass('modalAgentPassword', 'eyeAgent')" aria-label="Toggle password visibility">
+                <i class="ph ph-eye" id="eyeAgent" aria-hidden="true"></i>
             </button>
         </div>
     </div>
 
     <div class="form-group">
-        <label>Role</label>
+        <label for="modalRole">Role</label>
         <div class="select-wrapper">
             <select id="modalRole" class="modern-select">
                 <option value="Agent">Agent</option>
                 <option value="TL">Team Leader</option>
                 <option value="SME">SME</option>
             </select>
-            <i class="ph ph-caret-down select-arrow"></i>
+            <i class="ph ph-caret-down select-arrow" aria-hidden="true"></i>
         </div>
     </div>
 
     <div class="form-group">
-        <label>Team</label>
+        <label for="modalTeam">Team</label>
         <div class="select-wrapper">
             <select id="modalTeam" class="modern-select">
                 <option value="Hijryan">Hijryan</option>
@@ -514,7 +514,7 @@
                 <option value="Farikha">Farikha</option>
                 <option value="Support">Support</option>
             </select>
-            <i class="ph ph-caret-down select-arrow"></i>
+            <i class="ph ph-caret-down select-arrow" aria-hidden="true"></i>
         </div>
     </div>
 </div>
@@ -535,10 +535,10 @@
             </div>
             
             <div class="password-input-wrapper">
-    <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••">
+    <input type="password" id="adminPassInput" class="modern-input text-center" placeholder="••••••" aria-label="Admin password">
     
-    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()">
-        <i class="ph ph-eye" id="eyeIcon"></i>
+    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility">
+        <i class="ph ph-eye" id="eyeIcon" aria-hidden="true"></i>
     </button>
 </div>
 
@@ -555,7 +555,7 @@
             <h3>Update Announcement</h3>
         </div>
         <div class="modal-body">
-            <p style="font-size:12px; color:var(--text-sub); margin-bottom:8px;">Write your message below:</p>
+            <label for="bulletinInputArea" style="font-size:12px; color:var(--text-sub); margin-bottom:8px; display:block;">Write your message below:</label>
             <textarea id="bulletinInputArea" class="modern-textarea" rows="4" placeholder="Type announcement here..."></textarea>
         </div>
         <div class="modal-footer">
@@ -621,8 +621,8 @@
     </div>
 </div>
 
-    <div id="saveStatus" class="toast-notification">
-        <i class="ph ph-check-circle"></i>
+    <div id="saveStatus" class="toast-notification" role="status" aria-live="polite">
+        <i class="ph ph-check-circle" aria-hidden="true"></i>
         <span>Data Saved</span>
     </div>
     
@@ -658,21 +658,21 @@
             <hr style="border:0; border-top:1px dashed var(--border); margin:0 0 20px 0;">
 
             <div class="form-group">
-                <label>Current Password</label>
+                <label for="accCurrentPass">Current Password</label>
                 <div class="password-input-group">
                     <input type="password" id="accCurrentPass" class="modern-input" readonly value="Loading...">
-                    <button type="button" class="eye-btn-inside" onclick="togglePass('accCurrentPass', 'eye1')">
-                        <i class="ph ph-eye" id="eye1"></i>
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accCurrentPass', 'eye1')" aria-label="Toggle password visibility">
+                        <i class="ph ph-eye" id="eye1" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>New Password</label>
+                <label for="accNewPass">New Password</label>
                 <div class="password-input-group">
                     <input type="password" id="accNewPass" class="modern-input" placeholder="Create new password">
-                    <button type="button" class="eye-btn-inside" onclick="togglePass('accNewPass', 'eye2')">
-                        <i class="ph ph-eye" id="eye2"></i>
+                    <button type="button" class="eye-btn-inside" onclick="togglePass('accNewPass', 'eye2')" aria-label="Toggle password visibility">
+                        <i class="ph ph-eye" id="eye2" aria-hidden="true"></i>
                     </button>
                 </div>
                 <p style="font-size:10px; color:var(--text-sub); margin-top:5px;">Minimum 4 characters</p>
@@ -737,19 +737,19 @@ window.addEventListener('load', function() {
         
         <div class="modal-body">
             <div class="form-group" style="margin-bottom:15px;">
-                <label style="font-size:11px; margin-bottom:5px; display:block; font-weight:600;">Who are you?</label>
+                <label for="loginUserSelect" style="font-size:11px; margin-bottom:5px; display:block; font-weight:600;">Who are you?</label>
                 <div class="select-wrapper">
                     <select id="loginUserSelect" class="modern-select">
                         <option>Loading users...</option> 
                     </select>
-                    <i class="ph ph-caret-down select-arrow"></i>
+                    <i class="ph ph-caret-down select-arrow" aria-hidden="true"></i>
                 </div>
             </div>
 
             <div class="password-input-wrapper">
-                <input type="password" id="initialPassInput" class="modern-input text-center" placeholder="Enter Password">
-                <button type="button" class="toggle-password-btn" onclick="toggleInitialPassword()">
-                    <i class="ph ph-eye" id="eyeIconInitial"></i>
+                <input type="password" id="initialPassInput" class="modern-input text-center" placeholder="Enter Password" aria-label="Enter Password">
+                <button type="button" class="toggle-password-btn" onclick="toggleInitialPassword()" aria-label="Toggle password visibility">
+                    <i class="ph ph-eye" id="eyeIconInitial" aria-hidden="true"></i>
                 </button>
             </div>
         </div>

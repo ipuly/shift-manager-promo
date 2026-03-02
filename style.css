@@ -51,6 +51,43 @@
     --shift-loa: #334155;  
 }
 
+/* --- THEME PRESETS --- */
+/* Default Slate (Tema sekarang) - Tidak perlu diubah */
+
+/* Tema 1: Emerald Night (Hijau Professional) */
+body.theme-emerald {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --accent: #34d399;
+    --bg-body: #064e3b;
+    --bg-card: #065f46;
+    --text-main: #ecfdf5;
+    --border: #047857;
+}
+
+/* Tema 2: Royal Purple (Elegan) */
+body.theme-purple {
+    --primary: #8b5cf6;
+    --primary-dark: #7c3aed;
+    --accent: #a78bfa;
+    --bg-body: #2e1065;
+    --bg-card: #4c1d95;
+    --text-main: #f5f3ff;
+    --border: #5b21b6;
+}
+
+/* Tema 3: Midnight Sunset (Oranye/Gelap) */
+body.theme-sunset {
+    --primary: #f97316;
+    --primary-dark: #ea580c;
+    --accent: #fb923c;
+    --bg-body: #1c1917;
+    --bg-card: #292524;
+    --text-main: #fafaf9;
+    --border: #44403c;
+}
+
+
 /* =========================================
    2. GLOBAL RESET & TYPOGRAPHY
    ========================================= */
@@ -2576,3 +2613,56 @@ tbody tr {
     margin-top: 20px;
     letter-spacing: 1px;
 }
+
+.form-group-row {
+    margin: 15px 0;
+    padding: 0 5px;
+}
+
+.custom-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.custom-checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary); /* Mengikuti warna biru tema */
+}
+
+.custom-checkbox-wrapper label {
+    font-size: 13px;
+    color: var(--text-sub);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Container untuk memposisikan checklist di bawah input password */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 0 5px;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary); /* Memberikan warna biru pada centang */
+}
+
+.checkbox-container label {
+    font-size: 13px;
+    color: var(--text-sub);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+}
+

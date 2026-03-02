@@ -31,6 +31,8 @@ let selectedTagFilter = 'ALL';
 
 let headerGreetingMode = true;
 
+let currentTheme = "default"; 
+
 // Kode Shift & Warna (Sesuai CSS Variables)
 const shiftTypes = {
     0: { code: "OFF", class: "bg-o" }, 
@@ -84,7 +86,8 @@ function updateUIForAdmin() {
         'btnAddAgent',      
         'btnResetShifts',   
         'btnEditBulletin',
-        'navLogHistory' 
+        'navLogHistory',
+        'adminThemeSection'
     ];
     
     // Toggle My Account (Hanya untuk Agent)
@@ -326,6 +329,19 @@ function triggerCelebration() {
 // ==========================================================
 // 4. DATA HANDLING (LOAD & SAVE)
 // ==========================================================
+function autoLoginCheck() {
+    const session = localStorage.getItem('SHIFT_APP_SESSION');
+    const expiry = localStorage.getItem('SHIFT_REMEMBER_EXPIRY');
+    const now = new Date().getTime();
+
+    // Jika ada session dan belum expired (atau memang Admin)
+    if (session && expiry && now < parseInt(expiry)) {
+        console.log("Session valid, auto unlocking...");
+        finishLoginProcess();
+        return true;
+    }
+    return false;
+}
 
 async function initData() {
     checkAuth(); 
@@ -342,25 +358,26 @@ async function initData() {
         if(!res.ok) throw new Error("Connection failed");
         
         const json = await res.json();
-        const data = json.record; 
+        const data = json.record;
 
+        // Inisialisasi Data Global
         masterData = data.master || [];
         shiftDataCurrent = data.shifts || []; 
         shiftDataNext = data.shiftsNext || Array(masterData.length).fill().map(() => Array(7).fill(0));
         bulletinMessage = data.bulletin || "No new announcements.";
         accessLogs = data.accessLogs || []; 
         lastUpdateTime = data.lastUpdate || "-";
+        currentTheme = data.currentTheme || "default"; 
         
         updateTimeBadge();
+        applyTheme(currentTheme);
 
-        // Migrasi Data (Password Default)
+        // Migrasi & Validasi Data
         let needMigration = false;
         if (masterData.length > 0 && !masterData[0].password) {
-            console.log("Migrating database...");
             masterData.forEach(agent => { agent.password = "123456"; });
             needMigration = true;
         }
-
         if(shiftDataNext.length < masterData.length) {
              const diff = masterData.length - shiftDataNext.length;
              for(let i=0; i<diff; i++) shiftDataNext.push([0,0,0,0,0,0,0]);
@@ -368,51 +385,58 @@ async function initData() {
 
         renderBulletin(); 
         if (needMigration) await saveAllSilent();
-
         if(loadingLayer) loadingLayer.style.display = 'none';
         
-    } catch (error) {
-        console.error(error);
-        alert("Failed to load data!");
-    }
-    
-    prepareLockScreen(); 
-    
-    // [UPDATE] MUNCULKAN LOCK SCREEN SETIAP SAAT (Disable Auto-Login)
-    setTimeout(() => {
-        const loader = document.getElementById('preloader');
-        if(loader) {
-            loader.style.opacity = '0';
-            loader.style.visibility = 'hidden';
-            
-            setTimeout(() => { 
-                loader.style.display = 'none'; 
+        // Siapkan Komponen UI
+        prepareLockScreen(); 
+        setTodayAsDefault(); 
+
+        // --- LOGIKA AUTO LOGIN (REMEMBER ME) ---
+        const isAutoLoggedIn = autoLoginCheck();
+
+        // Logika Preloader & Modal Login
+        setTimeout(() => {
+            const loader = document.getElementById('preloader');
+            if(loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
                 
-                // SELALU MUNCULKAN MODAL LOGIN (Agar alur jelas)
-                const authModal = document.getElementById('initialAuthModal');
-                if(authModal) {
-                    authModal.style.display = 'flex';
-                    authModal.style.opacity = '1';
-                }
-            }, 300);
-        }
-    }, 1500);
-    initData:
-    setTodayAsDefault(); 
-    updateHeaderGreeting(); 
-    
-    // Jalankan Timer
+                setTimeout(() => { 
+                    loader.style.display = 'none'; 
+                    // Tampilkan modal login HANYA JIKA tidak berhasil auto-login
+                    if (!isAutoLoggedIn) {
+                        const authModal = document.getElementById('initialAuthModal');
+                        if(authModal) {
+                            authModal.style.display = 'flex';
+                            authModal.style.opacity = '1';
+                        }
+                    } else {
+                        // Jika auto-login berhasil, pastikan UI dashboard siap
+                        updateHeaderGreeting(); 
+                        forceOpenScheduleTab();
+                    }
+                }, 500);
+            }
+        }, 1500);
+
+    } catch (error) {
+        console.error("Initialization Error:", error);
+        // Sembunyikan loader jika error agar tidak stuck
+        const loader = document.getElementById('preloader');
+        if(loader) loader.style.display = 'none';
+        alert("Failed to sync with database. Please check your connection.");
+    }
+
+    // Timer Sapaan (Hanya jalan jika sudah login)
     setInterval(() => {
-        // Cek apakah user sedang login?
         const myId = localStorage.getItem('my_profile_id');
         if (myId !== null && masterData[myId]) {
-            // Jika login, balik status mode (True <-> False)
             headerGreetingMode = !headerGreetingMode;
             updateHeaderGreeting();
         }
-    }, 5000); // 5000ms = 5 Detik
-    forceOpenScheduleTab(); 
+    }, 5000);
 }
+
 
 // --- FITUR AUTO SELECT HARI INI ---
 // --- LOGIKA DAY CHIPS ---
@@ -462,7 +486,8 @@ async function saveAll() {
         shiftsNext: shiftDataNext,
         bulletin: bulletinMessage,
         accessLogs: accessLogs, 
-        lastUpdate: lastUpdateTime 
+        lastUpdate: lastUpdateTime,
+        currentTheme: currentTheme
     }
 
     // 3. Tampilkan Toast "Sedang Menyimpan..."
@@ -627,6 +652,26 @@ function switchTab(tabName, btnElement) {
     btnElement.classList.add('active');
 }
 
+
+function applyTheme(themeName) {
+    // Hapus semua kelas tema lama
+    document.body.classList.remove('theme-emerald', 'theme-purple', 'theme-sunset');
+    
+    // Pasang tema baru jika bukan default
+    if(themeName !== "default") {
+        document.body.classList.add('theme-' + themeName);
+    }
+    currentTheme = themeName;
+}
+
+function adminChangeTheme(themeName) {
+    if(!isAdmin) return; // Hanya Admin yang bisa set
+    applyTheme(themeName);
+    saveAll(); // Simpan pilihan ke database agar semua user berubah
+    showToast("Theme updated for all users!", "success");
+}
+
+
 // ==========================================================
 // FUNGSI RENDER TABLES (MODERN LAYOUT)
 // ==========================================================
@@ -634,38 +679,43 @@ function switchTab(tabName, btnElement) {
 function renderTables() {
     const container = document.getElementById("mainContainer");
     container.innerHTML = ""; 
-    const supervisors = ["Hijryan", "Silvia", "Farikha", "Support"];
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    
+    // 1. Ambil daftar Agent yang memiliki Role 'TL'
+    const allTLs = masterData.filter(agent => agent.role === "TL");
+    
+    // 2. Buat daftar nama tim secara dinamis
+    let supervisors = allTLs.map(tl => tl.name);
+    
+    // Tambahkan Support manual jika diperlukan
+    if (!supervisors.includes("Support")) supervisors.push("Support");
 
-    // Cari hari ini untuk highlight
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const jsDay = new Date().getDay(); 
     let todayColIdx = jsDay - 1; 
     if (todayColIdx === -1) todayColIdx = 6; 
 
-    // Judul Mode (Jika Next Week aktif)
-    if (currentViewMode === 'next') {
-        const warning = document.createElement("div");
-        warning.style.padding = "10px";
-        warning.style.textAlign = "center";
-        warning.style.background = "#fff7ed";
-        warning.style.color = "#ea580c";
-        warning.style.fontSize = "12px";
-        warning.style.fontWeight = "bold";
-        warning.style.borderBottom = "1px solid #fed7aa";
-        warning.innerHTML = "<i class='ph ph-warning'></i> You are viewing NEXT WEEK (Initial)";
-        container.appendChild(warning);
-    }
-    
     const activeShifts = getActiveShiftData();
 
     supervisors.forEach(spvName => {
+        // PERBAIKAN: Filter anggota tim dengan pengecekan yang lebih fleksibel
+        // Mencocokkan jika kolom 'spv' agen mengandung nama depan TL atau sama persis
+        const teamMembers = masterData.filter(agent => {
+            if (!agent.spv) return false;
+            const spvLower = agent.spv.toLowerCase();
+            const targetLower = spvName.toLowerCase();
+            const firstName = spvName.split(' ')[0].toLowerCase();
+            
+            return spvLower === targetLower || spvLower === firstName;
+        });
+        
+        // Jangan render jika tim kosong
+        if (teamMembers.length === 0) return;
+
         const section = document.createElement("div");
         section.className = "team-section";
         section.dataset.team = spvName; 
-        
         section.innerHTML = `<div class="team-header">TEAM ${spvName.toUpperCase()}</div>`;
         
-        // --- HEADER TABEL ---
         let tableHtml = `<table><thead><tr><th>Name</th>`;
         days.forEach((d, i) => {
             const isToday = (i === todayColIdx) ? 'class="today-col"' : '';
@@ -673,47 +723,61 @@ function renderTables() {
         });
         tableHtml += `</tr></thead><tbody>`;
 
-        masterData.forEach((agent, globalIndex) => {
-            if(agent.spv === spvName) {
-                
-                // Highlight Baris Saya
-                const myId = localStorage.getItem('my_profile_id');
-                const isMe = (myId == globalIndex) ? "class='my-row'" : ""; 
+        teamMembers.forEach(agent => {
+            const globalIndex = masterData.findIndex(m => m.name === agent.name);
+            const myId = localStorage.getItem('my_profile_id');
+            const isMe = (myId == globalIndex) ? "class='my-row'" : ""; 
 
-                tableHtml += `<tr ${isMe} id="row-${globalIndex}" onclick="toggleRowHighlight(${globalIndex})">
-                    <td>${agent.name}</td>`;
-                
-                // Isi Shift
-                for(let d=0; d<7; d++) {
-                    const val = activeShifts[globalIndex][d];
-                    const type = shiftTypes[val] || shiftTypes[0]; 
-                    const isTodayCell = (d === todayColIdx) ? 'today-col' : '';
+            tableHtml += `<tr ${isMe} id="row-${globalIndex}" onclick="toggleRowHighlight(${globalIndex})">
+                <td>${agent.name}</td>`;
+            
+            for(let d=0; d<7; d++) {
+                const val = activeShifts[globalIndex][d];
+                const type = shiftTypes[val] || shiftTypes[0]; 
+                const isTodayCell = (d === todayColIdx) ? 'today-col' : '';
 
-                    // Kita gunakan onmousedown/onmouseup (untuk PC) DAN ontouchstart/ontouchend (untuk HP)
-// Perhatikan kita menghapus 'onclick' biasa dan menggantinya dengan logika handleRelease
-tableHtml += `<td class="${isTodayCell}">
-    <button class="cell-btn ${type.class}" 
-        onmousedown="startPress(${globalIndex}, ${d})" 
-        onmouseup="handleRelease(${globalIndex}, ${d})" 
-        onmouseleave="cancelPress()"
-        ontouchstart="startPress(${globalIndex}, ${d})" 
-        ontouchend="handleRelease(${globalIndex}, ${d})"
-    >
-        ${type.code}
-    </button>
-</td>`;
-
-                }
-                                tableHtml += `</tr>`;
+                tableHtml += `<td class="${isTodayCell}">
+                    <button class="cell-btn ${type.class}" 
+                        onmousedown="startPress(${globalIndex}, ${d})" 
+                        onmouseup="handleRelease(${globalIndex}, ${d})" 
+                        ontouchstart="startPress(${globalIndex}, ${d})" 
+                        ontouchend="handleRelease(${globalIndex}, ${d})"
+                    >${type.code}</button>
+                </td>`;
             }
+            tableHtml += `</tr>`;
         });
         tableHtml += `</tbody></table>`;
         section.appendChild(document.createElement("div")).innerHTML = tableHtml;
         container.appendChild(section);
     });
     
+    // Panggil fungsi untuk update dropdown filter agar sinkron
+    updateTeamFilterDropdown(supervisors);
     filterTables(); 
     renderInteractiveLegend();
+} 
+
+function updateTeamFilterDropdown(activeSupervisors) {
+    const filterSelect = document.getElementById("teamFilter");
+    if (!filterSelect) return;
+
+    // Simpan nilai yang sedang dipilih user sekarang
+    const currentSelection = filterSelect.value;
+
+    // Reset isi dropdown
+    filterSelect.innerHTML = '<option value="ALL">All Teams</option>';
+
+    activeSupervisors.forEach(spv => {
+        const opt = document.createElement("option");
+        opt.value = spv;
+        opt.text = `Team ${spv}`;
+        filterSelect.appendChild(opt);
+    });
+
+    // Kembalikan pilihan user jika masih ada di daftar baru
+    filterSelect.value = currentSelection;
+    if (!filterSelect.value) filterSelect.value = "ALL";
 }
 
 
@@ -725,13 +789,12 @@ function filterTables() {
 }
 
 function cycleShift(idx, dayIdx) {
-    if(!checkPermission()) return; 
+    // Jika bukan Admin, keluar secara senyap tanpa notifikasi
+    if(!isAdmin) return; 
     
+    // Jika Admin tapi mode edit belum diaktifkan, baru munculkan peringatan
     if (!isEditMode) {
-        // Efek getar HP (Haptic Feedback) menandakan error
         if (navigator.vibrate) navigator.vibrate(50);
-        
-        // Notif Bahasa Inggris Modern
         showToast("🔒 View Only. Tap button to edit.", "error");
         return; 
     }
@@ -1399,26 +1462,26 @@ function renderTagsBar() {
     
     container.innerHTML = "";
     
-    // Daftar Tag
-    const tags = ["ALL", "Hijryan", "Silvia", "Farikha", "Support"];
+    // 1. Ambil semua nama SPV/Tim yang unik dari masterData secara otomatis
+    const activeTeams = [...new Set(masterData.map(agent => agent.spv))].filter(team => team);
     
-    tags.forEach(tag => {
+    // 2. Susun daftar Tag (Mulai dengan 'ALL', lalu tim yang aktif, lalu 'Support')
+    // Kita filter 'Support' agar tidak ganda karena nanti akan ditambah manual di akhir
+    const finalTags = ["ALL", ...activeTeams.filter(t => t !== "Support"), "Support"];
+    
+    finalTags.forEach(tag => {
         const btn = document.createElement("div");
         const isActive = (selectedTagFilter === tag);
         
         btn.className = `tag-btn ${isActive ? 'active' : ''}`;
         
-        // --- BAGIAN INI YANG DIUBAH ---
+        // Label tampilan
         if(tag === "ALL") {
             btn.innerText = "All Teams";
-        } 
-        else if(tag === "Support") {
-            btn.innerText = "Support"; // Cukup "Support" saja (tanpa TL/SME)
         } 
         else {
             btn.innerText = tag;
         }
-        // -----------------------------
         
         btn.onclick = () => {
             if (selectedTagFilter === tag && tag !== "ALL") {
@@ -1436,6 +1499,24 @@ function renderTagsBar() {
 
 function openModal(mode, idx) {
     if(!checkPermission()) return; 
+    
+    // --- TAMBAHKAN KODE INI UNTUK UPDATE DROPDOWN TEAM SECARA DINAMIS ---
+    const teamSelect = document.getElementById('modalTeam');
+    if (teamSelect) {
+        // Ambil semua nama unik dari agent yang memiliki role TL
+        const activeTLs = [...new Set(masterData.filter(a => a.role === "TL").map(a => a.name))];
+        
+        // Simpan pilihan Support jika belum ada
+        if (!activeTLs.includes("Support")) activeTLs.push("Support");
+
+        teamSelect.innerHTML = ""; // Kosongkan pilihan lama
+        activeTLs.forEach(tlName => {
+            const opt = document.createElement('option');
+            opt.value = tlName;
+            opt.text = tlName;
+            teamSelect.appendChild(opt);
+        });
+    }    
     
     const modal = document.getElementById('agentModal');
     const passInput = document.getElementById('modalAgentPassword');
@@ -2317,64 +2398,78 @@ function toggleInitialPassword() {
 function processInitialLogin() {
     const userVal = document.getElementById('loginUserSelect').value;
     const passVal = document.getElementById('initialPassInput').value;
-    
+    const isRemember = document.getElementById('rememberMe').checked;
     const PASS_ADMIN = "ipulyganteng";
+    let loginSuccess = false; 
 
-    // --- HELPER LOG ---
     const recordLogin = (name, role) => {
         const now = new Date();
         const timeString = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + " • " + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        if(!accessLogs) accessLogs = []; // Safety check
+        if(!accessLogs) accessLogs = [];
         accessLogs.unshift({ name: name, role: role, time: timeString });
         if(accessLogs.length > 50) accessLogs.pop();
-        // saveAllSilent(); // Opsional: aktifkan jika ingin auto-save log
     };
 
-    // --- SKENARIO 1: ADMIN ---
     if (userVal === "ADMIN_SYSTEM") {
         if (passVal === PASS_ADMIN) {
             isAdmin = true;
+            loginSuccess = true;
             localStorage.setItem('SHIFT_APP_SESSION', 'ADMIN');
             recordLogin("Administrator", "Super User");
-            finishLoginProcess();
-            showToast("Welcome, Admin!", "success");
         } else {
             alert("Wrong Admin Password!");
         }
-    } 
-    
-    // --- SKENARIO 2: AGENT ---
-    else {
+    } else {
         const agent = masterData[userVal];
-
         if (agent) {
             const correctPass = agent.password || "123456";
-
-            // Loose comparison (==) biar aman angka vs string
             if (passVal == correctPass) {
                 isAdmin = false; 
+                loginSuccess = true;
                 localStorage.setItem('my_profile_id', userVal);
                 localStorage.setItem('SHIFT_APP_SESSION', 'AGENT');
-                
                 recordLogin(agent.name, "Agent");
-
-                finishLoginProcess();
-                showToast("Login Success!", "success");
-                
-                // [BARU] Cek Password Default -> Tampilkan Modal Keren
                 if(passVal === "123456") {
-                    setTimeout(() => {
-                        showSecurityWarning(); // Panggil fungsi modal baru
-                    }, 800);
+                    setTimeout(() => { showSecurityWarning(); }, 800);
                 }
             } else {
                 alert("Wrong Password for " + agent.name);
             }
-        } else {
-            alert("User data not found!");
         }
     }
+
+    if (loginSuccess) {
+        if (isRemember) {
+            const expiryDate = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
+            localStorage.setItem('SHIFT_REMEMBER_EXPIRY', expiryDate);
+        } else {
+            localStorage.removeItem('SHIFT_REMEMBER_EXPIRY');
+        }
+        finishLoginProcess();
+        showToast("Login Success!", "success");
+    }
 }
+
+
+function checkAutoLogin() {
+    const session = localStorage.getItem('SHIFT_APP_SESSION');
+    const expiry = localStorage.getItem('SHIFT_REMEMBER_EXPIRY');
+    const now = new Date().getTime();
+
+    if (session && expiry) {
+        if (now < parseInt(expiry)) {
+            // Session masih valid, langsung masuk ke dashboard
+            finishLoginProcess();
+            return true;
+        } else {
+            // Session sudah expired, hapus data lama
+            localStorage.removeItem('SHIFT_APP_SESSION');
+            localStorage.removeItem('SHIFT_REMEMBER_EXPIRY');
+        }
+    }
+    return false;
+}
+
 
 // B. TAMBAHKAN FUNGSI BARU DI PALING BAWAH FILE
 // =========================================

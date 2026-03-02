@@ -102,7 +102,24 @@
         <div class="menu-icon"><i class="ph ph-clock-counter-clockwise"></i></div>
         <span>Login History</span>
     </div>
+    
+    <div id="adminThemeSection" style="display:none; padding: 10px;">
+    <label class="menu-label"><i class="ph ph-palette"></i> Global Theme (Admin)</label>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; padding: 0 10px;">
+        <button onclick="adminChangeTheme('default')" title="Default Blue" 
+            style="background:#2563eb; height:30px; border-radius:6px; border:2px solid rgba(255,255,255,0.2); cursor:pointer;"></button>
+        
+        <button onclick="adminChangeTheme('emerald')" title="Emerald Green"
+            style="background:#10b981; height:30px; border-radius:6px; border:2px solid rgba(255,255,255,0.2); cursor:pointer;"></button>
+        
+        <button onclick="adminChangeTheme('purple')" title="Royal Purple"
+            style="background:#8b5cf6; height:30px; border-radius:6px; border:2px solid rgba(255,255,255,0.2); cursor:pointer;"></button>
+        
+        <button onclick="adminChangeTheme('sunset')" title="Midnight Sunset"
+            style="background:#f97316; height:30px; border-radius:6px; border:2px solid rgba(255,255,255,0.2); cursor:pointer;"></button>
+    </div>
 </div>
+
             
         </div>
     </header>
@@ -506,17 +523,14 @@
     </div>
 
     <div class="form-group">
-        <label>Team</label>
-        <div class="select-wrapper">
-            <select id="modalTeam" class="modern-select">
-                <option value="Hijryan">Hijryan</option>
-                <option value="Silvia">Silvia</option>
-                <option value="Farikha">Farikha</option>
-                <option value="Support">Support</option>
+    <label>Team</label>
+    <div class="select-wrapper">
+        <select id="modalTeam" class="modern-select">
             </select>
-            <i class="ph ph-caret-down select-arrow"></i>
-        </div>
+        <i class="ph ph-caret-down select-arrow"></i>
     </div>
+</div>
+
 </div>
 
             <div class="modal-footer">
@@ -752,7 +766,15 @@ window.addEventListener('load', function() {
                     <i class="ph ph-eye" id="eyeIconInitial"></i>
                 </button>
             </div>
+            
+            <div class="checkbox-container">
+    <input type="checkbox" id="rememberMe">
+    <label for="rememberMe">Remember Me (30 Days)</label>
+</div>
+            
         </div>
+
+
 
         <div class="modal-footer vertical">
             <button class="btn btn-primary full" onclick="processInitialLogin()">

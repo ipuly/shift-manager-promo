@@ -34,15 +34,207 @@ let headerGreetingMode = true;
 let currentTheme = "default"; 
 
 // Kode Shift & Warna (Sesuai CSS Variables)
-const shiftTypes = {
-    0: { code: "OFF", class: "bg-o" }, 
-    1: { code: "P", class: "bg-p" },   
-    2: { code: "S", class: "bg-s" },   
-    3: { code: "M", class: "bg-m" },   
-    4: { code: "VL", class: "bg-vl" }, 
-    5: { code: "LOA", class: "bg-loa" },
-    6: { code: "BL", class: "bg-bl" }  
+// 1. Ganti shiftTypes lama dengan variabel let agar bisa diupdate
+let shiftTypes = {
+    0: { code: "OFF", color: "#e67e22", time: "OFF", fixed: true },   
+    1: { code: "P", color: "#2ecc71", time: "06.00-15.00", fixed: false },
+    2: { code: "S", color: "#3498db", time: "12.00-21.00", fixed: false },
+    3: { code: "M", color: "#7f8c8d", time: "21.00-06.00", fixed: false },
+    4: { code: "VL", color: "#145a32", time: "Leave", fixed: true },  
+    5: { code: "LOA", color: "#334155", time: "LOA", fixed: true },    
+    6: { code: "BL", color: "#1e3799", time: "Birthday", fixed: true } 
 };
+
+// A. Fungsi mengisi dropdown jam
+function populateHourDropdowns() {
+    const start = document.getElementById('startHour');
+    const end = document.getElementById('endHour');
+    if(!start || !end) return;
+    start.innerHTML = ""; end.innerHTML = "";
+    for(let i=0; i<24; i++) {
+        let hour = i < 10 ? "0" + i + ".00" : i + ".00";
+        start.innerHTML += `<option value="${hour}">${hour}</option>`;
+        end.innerHTML += `<option value="${hour}">${hour}</option>`;
+    }
+}
+
+// B. Render list shift di modal admin
+function renderShiftList() {
+    const container = document.getElementById('shiftTableContainer');
+    if(!container) return;
+    
+    let html = `<table style="width:100%; font-size:12px; border-collapse:collapse;">
+        <thead style="background:var(--bg-input)">
+            <tr><th style="padding:8px; text-align:left;">Shift</th><th>Jam</th><th style="text-align:right; padding:8px;">Aksi</th></tr>
+        </thead><tbody>`;
+    
+    Object.keys(shiftTypes).forEach(key => {
+    const s = shiftTypes[key];
+    
+    // Pastikan kode ini mengambil s.color dengan benar
+    const bgStyle = s.color ? `style="background-color: ${s.color} !important; color: white;"` : "";
+    const dynamicClass = "cell-btn"; // Gunakan base class saja jika warna diatur via inline style
+
+    html += `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;"><span class="${dynamicClass}" ${bgStyle}>${s.code}</span></td>
+        <td style="text-align:center;">${s.time}</td>
+        <td style="text-align:right; padding:8px;">
+            ${s.fixed ? '<i class="ph ph-lock" style="opacity:0.2"></i>' : 
+            `<div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button class="icon-btn" style="color:var(--primary)" onclick="editShiftType('${key}')"><i class="ph ph-pencil-simple"></i></button>
+                <button class="icon-btn" style="color:var(--danger)" onclick="deleteShift('${key}')"><i class="ph ph-trash"></i></button>
+            </div>`}
+        </td>
+    </tr>`;
+});
+    container.innerHTML = html + "</tbody></table>";
+    renderQuickMenu();
+} 
+
+// Edit Shift
+let editingShiftKey = null; // Untuk melacak shift mana yang sedang diedit
+
+function editShiftType(key) {
+    const s = shiftTypes[key];
+    editingShiftKey = key;
+
+    // Isi form dengan data lama
+    document.getElementById('inpShiftCode').value = s.code;
+    if(s.color) document.getElementById('inpShiftColor').value = s.color;
+    
+    // Pecah jam (misal 06.00-15.00)
+    if(s.time.includes('-')) {
+        const parts = s.time.split('-');
+        document.getElementById('startHour').value = parts[0];
+        document.getElementById('endHour').value = parts[1];
+    }
+
+    // Ubah teks tombol simpan
+    const saveBtn = document.querySelector('#shiftCrudModal .btn-primary');
+    saveBtn.innerHTML = `<i class="ph ph-check-circle"></i> Update Shift`;
+    saveBtn.onclick = () => finalizeEditShift();
+}
+
+function finalizeEditShift() {
+    if(editingShiftKey === null) return;
+    
+    const code = document.getElementById('inpShiftCode').value.toUpperCase();
+    const color = document.getElementById('inpShiftColor').value;
+    const time = `${document.getElementById('startHour').value}-${document.getElementById('endHour').value}`;
+
+    shiftTypes[editingShiftKey] = { 
+        ...shiftTypes[editingShiftKey], 
+        code, color, time 
+    };
+    
+    saveAll();
+    renderShiftList();
+    renderTables();
+    
+    // Reset form
+    resetShiftForm();
+    showToast("Shift berhasil diupdate!", "success");
+}
+
+function resetShiftForm() {
+    editingShiftKey = null;
+    document.getElementById('inpShiftCode').value = "";
+    const saveBtn = document.querySelector('#shiftCrudModal .btn-primary');
+    saveBtn.innerHTML = `<i class="ph ph-plus-circle"></i> Simpan ke Database`;
+    saveBtn.onclick = () => saveShiftType();
+}
+
+
+// C. Simpan Shift Baru
+function saveShiftType() {
+    const code = document.getElementById('inpShiftCode').value.toUpperCase();
+    const color = document.getElementById('inpShiftColor').value;
+    const time = `${document.getElementById('startHour').value}-${document.getElementById('endHour').value}`;
+
+    if(!code) return showToast("Kode shift wajib diisi!", "error");
+
+    const nextIdx = Math.max(...Object.keys(shiftTypes).map(Number)) + 1;
+    shiftTypes[nextIdx] = { code, color, time, fixed: false };
+    
+    saveAll(); // Upload ke database
+    renderShiftList();
+    renderTables(); // Update tampilan tabel utama
+    document.getElementById('inpShiftCode').value = "";
+    showToast("Shift berhasil ditambahkan!", "success");
+}
+
+function deleteShift(key) {
+    if(shiftTypes[key].fixed) return;
+    if(confirm(`Hapus master shift ${shiftTypes[key].code}?`)) {
+        delete shiftTypes[key];
+        saveAll();
+        renderShiftList();
+        renderTables();
+        showToast("Shift dihapus!", "success");
+    }
+}
+
+function renderQuickMenu() {
+    const grid = document.querySelector('.qm-grid');
+    if(!grid) return;
+    grid.innerHTML = "";
+    
+    Object.keys(shiftTypes).forEach(key => {
+        const s = shiftTypes[key];
+        const style = s.color ? `style="background-color:${s.color}; color:white;"` : `class="qm-btn ${s.class}"`;
+        
+        grid.innerHTML += `<button ${s.color ? `style="background-color:${s.color}" class="qm-btn"` : `class="qm-btn ${s.class}"`} 
+            onclick="setShiftDirect(${key})">${s.code}</button>`;
+    });
+}
+
+function closeShiftModal() {
+    document.getElementById('shiftCrudModal').style.display = 'none';
+    resetShiftForm();
+}
+
+
+
+// 5. Integrasi Menu Admin (PENTING)
+// Tambahkan ini di dalam fungsi updateUIForAdmin() yang sudah ada di script.js
+function injectAdminMenu() {
+    const mainMenu = document.getElementById('mainMenu');
+    const themeSection = document.getElementById('adminThemeSection');
+    
+    if(isAdmin && !document.getElementById('menu-master-shift')) {
+        const div = document.createElement('div');
+        div.id = "menu-master-shift";
+        div.className = "menu-item";
+        div.innerHTML = `<div class="menu-icon"><i class="ph ph-clock-user"></i></div><span>Master Shift Jam</span>`;
+        div.onclick = () => { 
+            toggleMenu(); 
+            document.getElementById('shiftCrudModal').style.display='flex'; 
+            populateHourDropdowns();
+            renderShiftList();
+        };
+        // Memasukkan menu SEBELUM themeSection agar posisinya di atas
+        if (themeSection) {
+            mainMenu.insertBefore(div, themeSection);
+        } else {
+            mainMenu.appendChild(div);
+        }
+    }
+}
+
+// Panggil injectAdminMenu() di dalam updateUIForAdmin()
+
+function closeShiftModal() {
+    document.getElementById('shiftCrudModal').style.display = 'none';
+}
+
+// Tutup modal jika user klik area gelap (overlay)
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('shiftCrudModal');
+    if (event.target === modal) {
+        closeShiftModal();
+    }
+});
+
 
 // ==========================================================
 // 3. SYSTEM AUTH & UI ADMIN
@@ -115,6 +307,7 @@ function updateUIForAdmin() {
     });
     isEditMode = false; 
     updateEditModeUI();
+    injectAdminMenu();
 
     // 2. Kontrol tombol Lock (Hanya muncul jika user adalah Admin)
     const btnLock = document.getElementById('btnEditToggle');
@@ -359,6 +552,9 @@ async function initData() {
         
         const json = await res.json();
         const data = json.record;
+        if (data.shiftTypes) {
+    shiftTypes = data.shiftTypes;
+}
 
         // Inisialisasi Data Global
         masterData = data.master || [];
@@ -484,6 +680,7 @@ async function saveAll() {
         master: masterData, 
         shifts: shiftDataCurrent, 
         shiftsNext: shiftDataNext,
+        shiftTypes: shiftTypes,
         bulletin: bulletinMessage,
         accessLogs: accessLogs, 
         lastUpdate: lastUpdateTime,
@@ -732,18 +929,24 @@ function renderTables() {
                 <td>${agent.name}</td>`;
             
             for(let d=0; d<7; d++) {
-                const val = activeShifts[globalIndex][d];
-                const type = shiftTypes[val] || shiftTypes[0]; 
-                const isTodayCell = (d === todayColIdx) ? 'today-col' : '';
+                // KODE BARU (Tempel di sini):
+const val = activeShifts[globalIndex][d];
+const type = shiftTypes[val] || shiftTypes[0]; 
+const isTodayCell = (d === todayColIdx) ? 'today-col' : '';
 
-                tableHtml += `<td class="${isTodayCell}">
-                    <button class="cell-btn ${type.class}" 
-                        onmousedown="startPress(${globalIndex}, ${d})" 
-                        onmouseup="handleRelease(${globalIndex}, ${d})" 
-                        ontouchstart="startPress(${globalIndex}, ${d})" 
-                        ontouchend="handleRelease(${globalIndex}, ${d})"
-                    >${type.code}</button>
-                </td>`;
+// Cek apakah pakai warna picker (color) atau warna bawaan (class)
+const bgStyle = type.color ? `style="background-color: ${type.color} !important; color: white; border:none;"` : "";
+const classList = type.color ? "cell-btn" : `cell-btn ${type.class}`;
+
+tableHtml += `<td class="${isTodayCell}">
+    <button ${bgStyle} class="${classList}" 
+        onmousedown="startPress(${globalIndex}, ${d})" 
+        onmouseup="handleRelease(${globalIndex}, ${d})" 
+        ontouchstart="startPress(${globalIndex}, ${d})" 
+        ontouchend="handleRelease(${globalIndex}, ${d})"
+    >${type.code}</button>
+</td>`;
+
             }
             tableHtml += `</tr>`;
         });
@@ -830,6 +1033,7 @@ function searchNames() {
 function renderGrouping() {
     const dayIdx = document.getElementById("daySelector").value;
     
+    // Inisialisasi grup
     let lists = { P: [], S: [], M: [], O: [], VL: [], LOA: [], TL: [], SME: [] };
     let agentCounts = { P: 0, S: 0, M: 0 }; 
     
@@ -843,113 +1047,83 @@ function renderGrouping() {
         const isWorking = (val !== 0 && val !== 4 && val !== 5 && val !== 6); 
         const isSupport = (agent.role === "TL" || agent.role === "SME");
 
-        // --- 1. MODERN SEPARATOR STYLE ---
-        // Menggunakan RGBA agar transparan & terlihat modern di Dark/Light mode
-        // Padding sedikit diperbesar (8px) agar tidak terlalu rapat
-        let rowStyle = "border-bottom: 1px dashed rgba(150, 150, 150, 0.2); padding: 8px 0;"; 
-        
-        // --- 2. SETUP WARNA TEXT (FIX NIGHT MODE) ---
-        // Default: Mengikuti Tema (var(--text-main))
-        // Jika Active Profile (isMe): PAKSA jadi HITAM (#1e293b) karena backgroundnya kuning terang
-        let textColor = isMe ? "#1e293b" : "var(--text-main)";
-
-        let nameStyle = `font-weight:600; color:${textColor}; font-size:11px; letter-spacing:0.2px;`;
-        let badgeHtml = "";
-        
-        // Style Khusus TL
-        if (agent.role === "TL") {
-            // Jika isMe, tetap hitam. Jika bukan, jadi Orange.
-            const tlColor = isMe ? "#c2410c" : "#e67e22"; 
-            nameStyle = `font-weight:700; color:${tlColor}; font-size:11px;`; 
-            badgeHtml = `<span style="font-size:9px; border:1px solid ${tlColor}; color:${tlColor}; padding:0px 3px; border-radius:3px; margin-left:5px; font-weight:600;">TL</span>`;
-        } 
-        // Style Khusus SME
-        else if (agent.role === "SME") {
-            const smeColor = isMe ? "#7e22ce" : "#9b59b6";
-            nameStyle = `font-weight:700; color:${smeColor}; font-size:11px;`; 
-            badgeHtml = `<span style="font-size:9px; border:1px solid ${smeColor}; color:${smeColor}; padding:0px 3px; border-radius:3px; margin-left:5px; font-weight:600;">SME</span>`;
+        // Ambil jam mulai untuk menentukan kategori (Pagi, Siang, Malam)
+        let startHour = -1;
+        if (shiftObj.time && shiftObj.time.includes('.')) {
+            startHour = parseInt(shiftObj.time.split('.')[0]);
         }
 
-        // --- HTML STRUKTUR ---
+        // --- SETUP TAMPILAN NAMA (Sama seperti kodemu sebelumnya) ---
+        let textColor = isMe ? "#1e293b" : "var(--text-main)";
+        let nameStyle = `font-weight:600; color:${textColor}; font-size:11px;`;
+        let badgeHtml = "";
+        
+        if (agent.role === "TL") {
+            const tlColor = isMe ? "#c2410c" : "#e67e22"; 
+            badgeHtml = `<span style="border:1px solid ${tlColor}; color:${tlColor}; font-size:9px; padding:0 3px; border-radius:3px; margin-left:5px;">TL</span>`;
+        } else if (agent.role === "SME") {
+            const smeColor = isMe ? "#7e22ce" : "#9b59b6";
+            badgeHtml = `<span style="border:1px solid ${smeColor}; color:${smeColor}; font-size:9px; padding:0 3px; border-radius:3px; margin-left:5px;">SME</span>`;
+        }
+
         const htmlContent = `
-            <div style="${rowStyle} display:flex; justify-content:space-between; align-items:center; width:100%;">
-                
-                <div style="display:flex; align-items:center; flex-grow:1; overflow:hidden; padding-right:8px;">
-                    <span style="${nameStyle} white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${agent.name}${isMe ? ' ⭐' : ''}
-                    </span>
+            <div style="border-bottom: 1px dashed rgba(150,150,150,0.2); padding: 8px 0; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div style="display:flex; align-items:center; overflow:hidden;">
+                    <span style="${nameStyle}">${agent.name}${isMe ? ' ⭐' : ''}</span>
                     ${badgeHtml}
                 </div>
-                
-                <span style="font-size:9px; color:#94a3b8; font-weight:bold; background:rgba(150,150,150,0.1); padding:2px 6px; border-radius:4px; flex-shrink:0; border:1px solid rgba(150,150,150,0.2); min-width:20px; text-align:center;">
+                <span style="font-size:9px; color:#94a3b8; font-weight:bold; background:rgba(150,150,150,0.1); padding:2px 6px; border-radius:4px;">
                     ${shiftObj.code}
                 </span>
-
             </div>
         `;
 
         const itemData = { html: htmlContent, isMe: isMe };
-        
-        // --- LOGIC GROUPING ---
+
+        // --- LOGIKA PENGELOMPOKAN BERDASARKAN JAM ---
         if (agent.role === "TL" && isWorking) lists.TL.push(itemData);
         else if (agent.role === "SME" && isWorking) lists.SME.push(itemData);
 
-        if (val === 1) { // PAGI
-            lists.P.push(itemData);       
+        // Cek Jam Mulai
+        if (startHour >= 6 && startHour <= 11) {
+            lists.P.push(itemData); // Morning
             if (!isSupport) agentCounts.P++; 
-        }
-        else if (val === 2) { // SIANG
-            lists.S.push(itemData);
+        } 
+        else if (startHour >= 12 && startHour <= 18) {
+            lists.S.push(itemData); // Afternoon
             if (!isSupport) agentCounts.S++;
-        }
-        else if (val === 3) { // MALAM
-            lists.M.push(itemData);
+        } 
+        else if (startHour >= 19 || (startHour >= 0 && startHour <= 5)) {
+            lists.M.push(itemData); // Night
             if (!isSupport) agentCounts.M++;
         }
-        else if (val === 0) lists.O.push(itemData);  
+        // Status Khusus
+        else if (val === 0) lists.O.push(itemData);
         else if (val === 5) lists.LOA.push(itemData);
-        else if (val === 4 || val === 6) lists.VL.push(itemData); 
+        else if (val === 4 || val === 6) lists.VL.push(itemData);
     });
     
-    // --- RENDER KE DOM ---
-    ["P","S","M","O","VL","BL","LOA","TL","SME"].forEach(k => {
+    // Render ke layar (Sama seperti kodemu sebelumnya)
+    ["P","S","M","O","VL","LOA","TL","SME"].forEach(k => {
         const countSpan = document.getElementById(`c${k}`);
         const ul = document.getElementById(`l${k}`);
-        
         if(countSpan && ul) {
             if (k === 'P') countSpan.innerText = agentCounts.P;
             else if (k === 'S') countSpan.innerText = agentCounts.S;
             else if (k === 'M') countSpan.innerText = agentCounts.M;
-            else countSpan.innerText = lists[k] ? lists[k].length : 0;
+            else countSpan.innerText = lists[k].length;
 
             ul.innerHTML = ""; 
-
-            if(lists[k] && lists[k].length > 0) {
-                lists[k].forEach(item => { 
-                    const li = document.createElement("li"); 
-                    li.style.padding = "0 5px"; 
-                    li.style.border = "none";
-                    li.style.listStyle = "none";
-                    li.innerHTML = item.html; 
-                    
-                    // Highlight Saya (Background Kuning)
-                    if(item.isMe) {
-                         li.style.background = "#fffde7"; // Kuning Terang
-                         li.style.borderRadius = "6px";
-                         // Catatan: Warna teks sudah dipaksa jadi gelap di variabel 'nameStyle' di atas
-                    }
-                    ul.appendChild(li); 
-                });
-            } else {
-                ul.innerHTML = "<li style='color:#ccc;text-align:center; padding:10px; font-size:10px;'>-</li>";
-            }
+            lists[k].forEach(item => {
+                const li = document.createElement("li");
+                if(item.isMe) li.style.background = "#fffde7";
+                li.innerHTML = item.html;
+                ul.appendChild(li);
+            });
         }
     });
-
-    /* if(typeof renderDailyNarrative === "function") {
-        renderDailyNarrative();
-    } */
 }
+
 
 // =========================================
 // FEATURE: ZOOM DAILY SUMMARY
@@ -1046,30 +1220,44 @@ function generateSummaryHtml() {
     const activeShifts = getActiveShiftData();
 
     masterData.forEach((agent, idx) => {
-        const val = activeShifts[idx][dayIdx];
-        const role = agent.role;
-        const name = agent.name.split(' ')[0]; // Ambil Nama Depan Saja
+    const val = activeShifts[idx][dayIdx];
+    const shiftObj = shiftTypes[val] || shiftTypes[0];
+    const role = agent.role;
+    const name = agent.name.split(' ')[0]; // Ambil nama panggilan
 
-        // --- HITUNG DATA ---
-        if (val >= 1 && val <= 3) {
-            let sCode = (val === 1) ? 'P' : (val === 2 ? 'S' : 'M');
-            
-            // LOGIKA: Pisahkan Agent & Support
-            if (role === "TL" || role === "SME") {
-                // HANYA PUSH NAMA (Tanpa embel-embel TL/SME)
-                supports[sCode].push(name); 
-            } else {
-                if (val === 1) counts.P++;
-                else if (val === 2) counts.S++;
-                else if (val === 3) counts.M++;
-            }
-        } else {
-            if (val === 0) counts.OFF++;
-            else if (val === 4) counts.VL++;
-            else if (val === 5) counts.LOA++;
-            else if (val === 6) { counts.BL++; blNames.push(agent.name); }
+    // --- CARI TAHU JAM MULAINYA ---
+    let startHour = -1;
+    if (shiftObj.time && shiftObj.time.includes('.')) {
+        startHour = parseInt(shiftObj.time.split('.')[0]);
+    }
+
+    // --- PENGELOMPOKAN AI BERDASARKAN JAM ---
+    if (startHour >= 6 && startHour <= 11) {
+        // Jika Jam 06.00 - 11.00 masuk MORNING
+        if (role === "TL" || role === "SME") supports.P.push(name);
+        else counts.P++;
+    } 
+    else if (startHour >= 12 && startHour <= 18) {
+        // Jika Jam 12.00 - 18.00 masuk AFTERNOON
+        if (role === "TL" || role === "SME") supports.S.push(name);
+        else counts.S++;
+    } 
+    else if (startHour >= 19 || (startHour >= 0 && startHour <= 5)) {
+        // Jika Jam 19.00 ke atas (atau dini hari) masuk NIGHT
+        if (role === "TL" || role === "SME") supports.M.push(name);
+        else counts.M++;
+    } 
+    else {
+        // Jika tidak ada jam (OFF, VL, dll)
+        if (val === 0) counts.OFF++;
+        else if (val === 4) counts.VL++;
+        else if (val === 5) counts.LOA++;
+        else if (val === 6) { 
+            counts.BL++; 
+            blNames.push(agent.name); 
         }
-    });
+    }
+});
 
     // Helper Render Support (Versi Text Only)
     const renderRow = (label, count, supportArr, colorBorder) => {

@@ -2931,7 +2931,7 @@ function updateHeaderGreeting() {
 
     // 1. JIKA BELUM LOGIN (Tampilkan Default Selamanya)
     if (myId === null || !masterData[myId]) {
-        titleEl.innerText = "Shift Manager Promotion"; 
+        titleEl.innerText = "Shift Manager Pro";
         titleEl.classList.remove('personalized-title');
         subEl.innerText = "Daily Dashboard";
         subEl.className = ""; 
@@ -3002,7 +3002,7 @@ function updateHeaderGreeting() {
     } else {
         // --- MODE 2: JUDUL APLIKASI (DEFAULT) ---
         
-        titleEl.innerText = "Shift Manager Promotion"; 
+        titleEl.innerText = "Shift Manager Pro";
         titleEl.classList.remove('personalized-title');
         
         subEl.innerText = "Daily Dashboard";
@@ -3064,4 +3064,15 @@ function forceOpenScheduleTab() {
             scrollToMyRow();
         }, 300); 
     }
+}
+
+// =========================================
+// SERVICE WORKER REGISTRATION
+// =========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker: Registered (Scope: ' + reg.scope + ')'))
+            .catch(err => console.log('Service Worker: Error: ' + err));
+    });
 }
